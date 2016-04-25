@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+	<param name="/UPDATE_RATE" value="50.0"/>
+	<param name="/K_PHI" value="1.0"/>
+	<param name="/K_DISP" value="0.5"/>
+	<param name="/K_TRIP_DIST" value="0.25"/>
+	<param name="/MAX_SPEED" value="0.25"/>
+	<param name="/MAX_OMEGA" value="0.5"/>
+
+	<param name="/K_PSI" value="2.5"/>
+	<param name="/K_LAT_ERR_THRESH" value="2.0"/>
+
+	<param name="/MIN_SAFE_DISTANCE" value="0.7"/>
+	<param name="/DETECT_DISTANCE" value="2.5"/>
+	<param name="/FRONT_ANGLE" value="0.5"/>
+	<param name="/LEFT_ANGLE" value="0.5"/>
+	<param name="/RIGHT_ANGLE" value="0.5"/>
+
+	<param name="/accel_max" value="0.5"/>
+	<param name="/alpha_max" value="0.2"/>
+	<param name="/speed_max" value="0.25"/>
+	<param name="/omega_max" value="0.5"/>
+
+	<node name= "traj_publisher" pkg= "p8_beta" type= "traj_publisher_ps8" args="jinx" output="screen">
+		<remap from="/amcl_odom" to="/odom" />
+	</node>
+	<node name= "steering_corrector" pkg= "p8_beta" type= "steering_corrector_ps8" output="screen">
+		<remap from="/amcl_odom" to="/odom" />
+	</node>
+</launch>
