@@ -9,23 +9,23 @@
 #include <BaxterArmCommander/BaxterArmCommander.h>
 
 std::string coke_id = "";
-double coke_conficent = 0;
+double coke_confidence = 0;
 geometry_msgs::PoseStamped coke_pose;
 bool firstCB = false;
 
 void objectCallback(const object_recognition_msgs::RecognizedObjectArray objects_msg) {
     double confident = 0;
     int id = -1;
-    ROS_WARN("Total %d objects found", (int)objects_msg.objects.size());
-    ROS_INFO("Frame_id 1: %s", objects_msg.header.frame_id.c_str());
+    //ROS_WARN("Total %d objects found", (int)objects_msg.objects.size());
+    //ROS_INFO("Frame_id 1: %s", objects_msg.header.frame_id.c_str());
 
     if (firstCB == false && (int)objects_msg.objects.size() == 1) {
         coke_id.assign(objects_msg.objects[0].type.key.c_str());
         firstCB == true;
     }
     for (int i = 0; i < objects_msg.objects.size(); ++i) {
-        ROS_INFO("Frame_id 2: %s", objects_msg.objects[i].header.frame_id.c_str());
-        ROS_INFO("Frame_id 3: %s", objects_msg.objects[i].pose.header.frame_id.c_str());
+        //ROS_INFO("Frame_id 2: %s", objects_msg.objects[i].header.frame_id.c_str());
+        //ROS_INFO("Frame_id 3: %s", objects_msg.objects[i].pose.header.frame_id.c_str());
         if (coke_id.compare(objects_msg.objects[i].type.key.c_str()) == 0) {
             if (objects_msg.objects[i].confidence > confident) {
                 confident = objects_msg.objects[i].confidence;
@@ -34,16 +34,16 @@ void objectCallback(const object_recognition_msgs::RecognizedObjectArray objects
         }
     }
     coke_pose.pose = objects_msg.objects[id].pose.pose.pose;
-    coke_conficent = objects_msg.objects[id].confidence;
-    ROS_INFO("Best Similarity = %f ", objects_msg.objects[id].confidence);
-    ROS_INFO("pose x is: %f", objects_msg.objects[id].pose.pose.pose.position.x);
-    ROS_INFO("pose y is: %f", objects_msg.objects[id].pose.pose.pose.position.y);
-    ROS_INFO("pose z is: %f", objects_msg.objects[id].pose.pose.pose.position.z);
-    ROS_INFO("---------------------------------");
+    coke_confidence = objects_msg.objects[id].confidence;
+    //ROS_INFO("Best Similarity = %f ", objects_msg.objects[id].confidence);
+    //ROS_INFO("pose x is: %f", objects_msg.objects[id].pose.pose.pose.position.x);
+    //ROS_INFO("pose y is: %f", objects_msg.objects[id].pose.pose.pose.position.y);
+    //ROS_INFO("pose z is: %f", objects_msg.objects[id].pose.pose.pose.position.z);
+    //ROS_INFO("---------------------------------");
 }
 
 void planeCallback(const object_recognition_msgs::TableArray plane_msg) {
-    ROS_WARN("Total %d planes found", (int)plane_msg.tables.size());
+    //ROS_WARN("Total %d planes found", (int)plane_msg.tables.size());
     /*
     for (int i = 0; i < plane_msg.tables.size(); ++i) {
         ROS_INFO("Plane %d: plane pose x is: %f", i+1, plane_msg.tables[i].pose.position.x);
@@ -67,9 +67,15 @@ int main(int argc, char** argv) {
     ros::Duration loop_timer(3.0);
 
     coke_pose.header.frame_id = "camera_depth_optical_frame";
-
     while (ros::ok()) {
-        if (coke_conficent > 0.9) {
+        ROS_INFO("move arm back");
+        arm.ArmBack();
+        ROS_INFO("Wait for object");
+        if (coke_confidence > 0.9) {
+            ROS_INFO("Best Similarity = %f ", coke_confidence);
+            ROS_INFO("pose x is: %f", coke_pose.pose.position.x);
+            ROS_INFO("pose y is: %f", coke_pose.pose.position.y);
+            ROS_INFO("pose z is: %f", coke_pose.pose.position.z);
             //stuff a goal message:
             bool tferr = true;
             while (tferr) {
@@ -87,6 +93,8 @@ int main(int argc, char** argv) {
             ROS_INFO("transformed coke pose y is: %f", transed_pose.pose.position.y);
             ROS_INFO("transformed coke pose z is: %f", transed_pose.pose.position.z);
             ROS_INFO("Grab the coke!");
+            arm.rightMove(transed_pose.pose);
+
             arm.grabCoke(transed_pose.pose);
         }
         ros::spinOnce();

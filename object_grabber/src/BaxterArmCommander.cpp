@@ -4,10 +4,9 @@
 
 #include <BaxterArmCommander/BaxterArmCommander.h>
 
-BaxterArmCommander::BaxterArmCommander(ros::NodeHandle &nodehandle) : nh_(nodehandle), right_gripper(nodehandle),
-                                                                      spinner(1), right_arm("right_arm"), left_arm("left_arm"),
+BaxterArmCommander::BaxterArmCommander(ros::NodeHandle &nodehandle) : nh_(nodehandle), right_gripper(nodehandle), right_arm("right_arm"), left_arm("left_arm"),
                                                                       display_publisher(nh_.advertise<moveit_msgs::DisplayTrajectory>("/move_group/display_planned_path", 1, true))  {
-    spinner.start();
+    //spinner.start();
     ROS_INFO("Reference right arm robot frame: %s", right_arm.getPlanningFrame().c_str());
     ROS_INFO("Reference right arm end-effector frame: %s", right_arm.getEndEffectorLink().c_str());
     ROS_INFO("Reference left arm robot frame: %s", left_arm.getPlanningFrame().c_str());
@@ -47,11 +46,14 @@ BaxterArmCommander::BaxterArmCommander(ros::NodeHandle &nodehandle) : nh_(nodeha
 }
 
 bool BaxterArmCommander::rightArmBack() {
+    ROS_INFO("Move right arm back");
+    ROS_INFO("Release gripper");
     rightRelease();
     return rightMove(right_arm_back_pose);
 }
 
 void BaxterArmCommander::rightExecute() {
+    ROS_INFO("executing right arm plan");
     right_arm.execute(right_plan);
 }
 
@@ -78,15 +80,17 @@ Vector7d BaxterArmCommander::rightGetJoints() {
 }
 
 void BaxterArmCommander::rightGrab() {
+    ROS_INFO("close gripper");
     right_gripper.open();
 }
 
 void BaxterArmCommander::rightRelease() {
+    ROS_INFO("open gripper");
     right_gripper.close();
 }
 
 bool BaxterArmCommander::rightPlan(geometry_msgs::Pose pose) {
-    //ROS_INFO("requesting a cartesian-space motion plan");
+    ROS_INFO("requesting a cartesian-space motion plan");
     pose = addPose(pose, global_pose_offset);
     right_arm.setPoseTarget(pose);
     return right_arm.plan(right_plan);
@@ -99,7 +103,7 @@ bool BaxterArmCommander::rightPlan(Vector3f plane_normal, Vector3f major_axis, V
 }
 
 bool BaxterArmCommander::rightPlan(Vector7d joints) {
-    //ROS_INFO("requesting a joint-space motion plan");
+    ROS_INFO("requesting a joint-space motion plan");
     joints = joints + global_joints_offset;
     std::vector<double> group_variable_values(7);
     for (int i = 0; i < 7; ++i)
@@ -156,6 +160,7 @@ void BaxterArmCommander::rightShowPath() {
     //sleep(5.0);
 }
 bool BaxterArmCommander::leftArmBack() {
+    ROS_INFO("Move left arm back");
     return leftMove(left_arm_back_pose);
 }
 void BaxterArmCommander::leftExecute() {
@@ -255,7 +260,9 @@ void BaxterArmCommander::leftShowPath() {
     //sleep(5.0);
 }
 bool BaxterArmCommander::ArmBack() {
-    if ((rightArmBack() == true) && (leftArmBack() == true)) {
+    bool right = rightArmBack();
+    bool left = leftArmBack();
+    if ((right == true) && (left == true)) {
         return true;
     }
     return false;
@@ -266,6 +273,8 @@ bool BaxterArmCommander::grabCoke(geometry_msgs::Pose coke_pose) {
     geometry_msgs::Pose pre_grab_pose = addPosOffset(coke_pose, pre_grab_offset);
     geometry_msgs::Pose hold_pose = addPosOffset(coke_pose, hold_offset);
     geometry_msgs::Pose pick_pose = addPosOffset(coke_pose, pick_offset);
+
+
     ROS_INFO("Move to hold pose");
     if (!rightMove(hold_pose)) { return false; }
     ros::Duration(0.5).sleep();

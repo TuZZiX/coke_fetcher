@@ -83,7 +83,7 @@ private:
     ros::NodeHandle nh_;
     BaxterGripper right_gripper;
 
-    ros::AsyncSpinner spinner;
+    //ros::AsyncSpinner spinner;
     moveit::planning_interface::MoveGroup right_arm, left_arm;
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
     moveit::planning_interface::MoveGroup::Plan right_plan, left_plan;
