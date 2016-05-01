@@ -25,15 +25,13 @@ void objectCallback(const object_recognition_msgs::RecognizedObjectArray objects
     double confident = 0;
     int id = -1;
     ROS_WARN("Total %d objects found", (int)objects_msg.objects.size());
-    ROS_INFO("Frame_id 1: %s", objects_msg.header.frame_id.c_str());
+    //ROS_INFO("Frame_id 1: %s", objects_msg.header.frame_id.c_str());
 
     if (firstCB == false && (int)objects_msg.objects.size() == 1) {
         coke_id.assign(objects_msg.objects[0].type.key.c_str());
         firstCB == true;
     }
     for (int i = 0; i < objects_msg.objects.size(); ++i) {
-        ROS_INFO("Frame_id 2: %s", objects_msg.objects[i].header.frame_id.c_str());
-        ROS_INFO("Frame_id 3: %s", objects_msg.objects[i].pose.header.frame_id.c_str());
         if (coke_id.compare(objects_msg.objects[i].type.key.c_str()) == 0) {
             if (objects_msg.objects[i].confidence > confident) {
                 confident = objects_msg.objects[i].confidence;
@@ -44,11 +42,6 @@ void objectCallback(const object_recognition_msgs::RecognizedObjectArray objects
     if (id >= 0) {
         coke_pose.pose = objects_msg.objects[id].pose.pose.pose;
         coke_conficent = objects_msg.objects[id].confidence;
-        ROS_INFO("Best Similarity = %f ", objects_msg.objects[id].confidence);
-        ROS_INFO("pose x is: %f", objects_msg.objects[id].pose.pose.pose.position.x);
-        ROS_INFO("pose y is: %f", objects_msg.objects[id].pose.pose.pose.position.y);
-        ROS_INFO("pose z is: %f", objects_msg.objects[id].pose.pose.pose.position.z);
-        ROS_INFO("---------------------------------");
     } else {
         confident = 0;
     }
@@ -116,6 +109,10 @@ int main(int argc, char** argv) {
         bool finished_before_timeout = coke_grabber_ac.waitForResult();
         if (coke_conficent > 0.8)
         {
+            ROS_INFO("Best Similarity = %f ", coke_conficent);
+            ROS_INFO("pose x is: %f", coke_pose.pose.position.x);
+            ROS_INFO("pose y is: %f", coke_pose.pose.position.y);
+            ROS_INFO("pose z is: %f", coke_pose.pose.position.z);
             //stuff a goal message:
             bool tferr = true;
             while (tferr) {
@@ -129,11 +126,14 @@ int main(int argc, char** argv) {
                     ros::spinOnce();
                 }
             }
-            ROS_INFO("tf is good"); //  tf-listener found a complete chain from sensor to world; ready to roll
+            ROS_INFO("transformed coke pose x is: %f", transed_pose.pose.position.x);
+            ROS_INFO("transformed coke pose y is: %f", transed_pose.pose.position.y);
+            ROS_INFO("transformed coke pose z is: %f", transed_pose.pose.position.z);
+            ROS_INFO("Grab the coke!");
             coke_grabber_goal.object_code = coke_grabber::coke_grabberGoal::COKE_CAN; //specify the object to be grabbed
             coke_grabber_goal.object_frame = transed_pose;
             ROS_INFO("sending goal: ");
-            coke_grabber_ac.sendGoal(coke_grabber_goal,&objectGrabberDoneCb); // we could also name additional callback functions here, if desired
+            coke_grabber_ac.sendGoal(coke_grabber_goal, &objectGrabberDoneCb); // we could also name additional callback functions here, if desired
             //    action_client.sendGoal(goal, &doneCb, &activeCb, &feedbackCb); //e.g., like this
 
             finished_before_timeout = coke_grabber_ac.waitForResult();

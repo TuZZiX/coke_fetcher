@@ -33,8 +33,12 @@ void objectCallback(const object_recognition_msgs::RecognizedObjectArray objects
             }
         }
     }
-    coke_pose.pose = objects_msg.objects[id].pose.pose.pose;
-    coke_confidence = objects_msg.objects[id].confidence;
+    if (id >= 0) {
+        coke_pose.pose = objects_msg.objects[id].pose.pose.pose;
+        coke_confidence = objects_msg.objects[id].confidence;
+    } else {
+        confident = 0;
+    }
     //ROS_INFO("Best Similarity = %f ", objects_msg.objects[id].confidence);
     //ROS_INFO("pose x is: %f", objects_msg.objects[id].pose.pose.pose.position.x);
     //ROS_INFO("pose y is: %f", objects_msg.objects[id].pose.pose.pose.position.y);
@@ -71,7 +75,7 @@ int main(int argc, char** argv) {
         ROS_INFO("move arm back");
         arm.ArmBack();
         ROS_INFO("Wait for object");
-        if (coke_confidence > 0.9) {
+        if (coke_confidence > 0.8) {
             ROS_INFO("Best Similarity = %f ", coke_confidence);
             ROS_INFO("pose x is: %f", coke_pose.pose.position.x);
             ROS_INFO("pose y is: %f", coke_pose.pose.position.y);

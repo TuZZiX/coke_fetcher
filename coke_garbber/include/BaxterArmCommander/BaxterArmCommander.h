@@ -39,7 +39,6 @@ public:
     bool rightMove(Vector7d joints);
     bool rightMove(Vector3f plane_normal, Vector3f major_axis, Vector3f centroid);
     bool rightMoveOffset(Vector3d offset);
-    void rightStop();
     void rightGrab();
     void rightRelease();
 
@@ -57,7 +56,6 @@ public:
     bool leftMove(Vector7d joints);
     bool leftMove(Vector3f plane_normal, Vector3f major_axis, Vector3f centroid);
     bool leftMoveOffset(Vector3d offset);
-    void leftStop();
     void leftGrab();
     void leftRelease();
 

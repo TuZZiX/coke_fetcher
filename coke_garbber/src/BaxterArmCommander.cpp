@@ -57,10 +57,6 @@ void BaxterArmCommander::rightExecute() {
     right_arm.execute(right_plan);
 }
 
-void BaxterArmCommander::rightStop() {
-    right_arm.stop();
-}
-
 geometry_msgs::Pose BaxterArmCommander::rightGetPose() {
     geometry_msgs::PoseStamped arm_pose = right_arm.getCurrentPose();
     geometry_msgs::Pose pose = arm_pose.pose;
@@ -165,10 +161,6 @@ bool BaxterArmCommander::leftArmBack() {
 }
 void BaxterArmCommander::leftExecute() {
     left_arm.execute(left_plan);
-}
-
-void BaxterArmCommander::leftStop() {
-    left_arm.stop();
 }
 
 geometry_msgs::Pose BaxterArmCommander::leftGetPose() {
