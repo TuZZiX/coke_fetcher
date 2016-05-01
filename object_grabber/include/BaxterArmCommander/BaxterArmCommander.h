@@ -6,17 +6,10 @@
 #define COKE_GRABBER_BAXTERARMCOMMANDER_H
 
 #include <ros/ros.h>
-#include <actionlib/client/simple_action_client.h>
-#include <actionlib/server/simple_action_server.h>
-#include <actionlib/client/terminal_state.h>
-#include <object_grabber/object_grabberAction.h>
 #include <eigen3/Eigen/Eigen>
 #include <eigen3/Eigen/Dense>
 #include <eigen3/Eigen/Geometry>
 #include <geometry_msgs/PoseStamped.h>
-#include <object_grabber/object_grabberAction.h>
-#include <std_msgs/Bool.h>
-#include <cartesian_planner/baxter_cart_moveAction.h>
 #include <moveit/move_group_interface/move_group.h>
 #include <moveit/planning_scene_interface/planning_scene_interface.h>
 #include <moveit_msgs/DisplayRobotState.h>

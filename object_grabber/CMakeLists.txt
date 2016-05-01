@@ -27,6 +27,7 @@ find_package(Boost REQUIRED COMPONENTS system thread)
 SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 
 # Libraries: uncomment the following and edit arguments to create a new library
+cs_add_library(arm_commander src/ArmMotionCommander.cpp)
 cs_add_library(baxter_gripper src/BaxterGripper.cpp)
 cs_add_library(baxter_arm src/BaxterArmCommander.cpp)
 
@@ -38,6 +39,7 @@ cs_add_executable(coke_grabber src/baxter_arm_test.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
 target_link_libraries(coke_grabber baxter_arm baxter_gripper ${catkin_LIBRARIES})
+target_link_libraries(object_grabber arm_commander ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()

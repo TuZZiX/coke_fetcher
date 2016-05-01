@@ -8,7 +8,6 @@
 #include <ros/ros.h>
 #include <std_msgs/Int16.h>
 #include <std_msgs/Bool.h>
-#include <math.h>
 
 class BaxterGripper {
 public:
