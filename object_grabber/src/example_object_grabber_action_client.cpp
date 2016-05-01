@@ -108,32 +108,30 @@ int main(int argc, char** argv) {
 
     while (ros::ok()) {
         //stuff a goal message:
-        if (coke_conficent > 0.95) {
-            bool tferr = true;
-            while (tferr) {
-                tferr = false;
-                try {
-                    tf_listener.transformPose("torso", coke_pose, transed_pose);
-                } catch (tf::TransformException &exception) {
-                    ROS_ERROR("%s", exception.what());
-                    tferr = true;
-                    ros::Duration(0.1).sleep(); // sleep for half a second
-                    ros::spinOnce();
-                }
+        bool tferr = true;
+        while (tferr) {
+            tferr = false;
+            try {
+                tf_listener.transformPose("torso", coke_pose, transed_pose);
+            } catch (tf::TransformException &exception) {
+                ROS_ERROR("%s", exception.what());
+                tferr = true;
+                ros::Duration(0.1).sleep(); // sleep for half a second
+                ros::spinOnce();
             }
-            ROS_INFO("tf is good"); //  tf-listener found a complete chain from sensor to world; ready to roll
-            object_grabber_goal.object_code = object_grabber::object_grabberGoal::COKE_CAN; //specify the object to be grabbed
-            object_grabber_goal.object_frame = transed_pose;
-            ROS_INFO("sending goal: ");
-            object_grabber_ac.sendGoal(object_grabber_goal,&objectGrabberDoneCb); // we could also name additional callback functions here, if desired
-            //    action_client.sendGoal(goal, &doneCb, &activeCb, &feedbackCb); //e.g., like this
+        }
+        ROS_INFO("tf is good"); //  tf-listener found a complete chain from sensor to world; ready to roll
+        object_grabber_goal.object_code = object_grabber::object_grabberGoal::COKE_CAN; //specify the object to be grabbed
+        object_grabber_goal.object_frame = transed_pose;
+        ROS_INFO("sending goal: ");
+        object_grabber_ac.sendGoal(object_grabber_goal,&objectGrabberDoneCb); // we could also name additional callback functions here, if desired
+        //    action_client.sendGoal(goal, &doneCb, &activeCb, &feedbackCb); //e.g., like this
 
-            bool finished_before_timeout = object_grabber_ac.waitForResult(ros::Duration(5.0));
-            //bool finished_before_timeout = action_client.waitForResult(); // wait forever...
-            if (!finished_before_timeout) {
-                ROS_WARN("giving up waiting on result ");
-                return 1;
-            }
+        bool finished_before_timeout = object_grabber_ac.waitForResult();
+        //bool finished_before_timeout = action_client.waitForResult(); // wait forever...
+        if (!finished_before_timeout) {
+            ROS_WARN("giving up waiting on result ");
+            return 1;
         }
         ros::spinOnce();
         loop_timer.sleep();

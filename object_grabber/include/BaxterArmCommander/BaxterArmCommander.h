@@ -33,22 +33,43 @@ class BaxterArmCommander {
 public:
     BaxterArmCommander(ros::NodeHandle &nodehandle);
 
-    bool rightArmBack(void);
-    Vector7d rightGetJoints(void);
-    geometry_msgs::Pose rightGetGripperPose(void);
+    bool rightArmBack();
+    Vector7d rightGetJoints();
+    geometry_msgs::Pose rightGetPose();
     void rightShowPath();
     bool rightPlan(geometry_msgs::Pose pose);
     bool rightPlan(Vector7d joints);
     bool rightPlanOffset(Vector3d offset);
     bool rightPlan(Vector3f plane_normal, Vector3f major_axis, Vector3f centroid);
-    bool rightExecute();
-    bool rightExecuteAsync();
+    void rightExecute();
+    bool rightMove(geometry_msgs::Pose pose);
+    bool rightMove(Vector7d joints);
+    bool rightMove(Vector3f plane_normal, Vector3f major_axis, Vector3f centroid);
+    bool rightMoveOffset(Vector3d offset);
     void rightStop();
     void rightGrab();
     void rightRelease();
 
 
-    bool leftArmBack(void);
+    bool leftArmBack();
+    Vector7d leftGetJoints();
+    geometry_msgs::Pose leftGetPose();
+    void leftShowPath();
+    bool leftPlan(geometry_msgs::Pose pose);
+    bool leftPlan(Vector7d joints);
+    bool leftPlanOffset(Vector3d offset);
+    bool leftPlan(Vector3f plane_normal, Vector3f major_axis, Vector3f centroid);
+    void leftExecute();
+    bool leftMove(geometry_msgs::Pose pose);
+    bool leftMove(Vector7d joints);
+    bool leftMove(Vector3f plane_normal, Vector3f major_axis, Vector3f centroid);
+    bool leftMoveOffset(Vector3d offset);
+    void leftStop();
+    void leftGrab();
+    void leftRelease();
+
+    bool ArmBack();
+    bool grabCoke(geometry_msgs::Pose coke_pose);
 
     Eigen::Affine3d transformPoseToEigenAffine3d(geometry_msgs::Pose pose);
     geometry_msgs::Pose transformEigenAffine3dToPose(Eigen::Affine3d e);
@@ -65,18 +86,20 @@ private:
     ros::AsyncSpinner spinner;
     moveit::planning_interface::MoveGroup right_arm, left_arm;
     moveit::planning_interface::PlanningSceneInterface planning_scene_interface;
-    moveit::planning_interface::MoveGroup::Plan my_plan;
+    moveit::planning_interface::MoveGroup::Plan right_plan, left_plan;
     ros::Publisher display_publisher;
     moveit_msgs::DisplayTrajectory display_trajectory;
 
     geometry_msgs::Pose right_arm_back_pose;
     geometry_msgs::Pose left_arm_back_pose;
 
-    Vector3d gripper_offset;
-    Vector3d drop_offset_left;
-    Vector3d drop_offset_right;
+    Vector3d pick_offset;
+    Vector3d hold_offset;
+    Vector3d pre_grab_offset;
+    Vector3d grab_offset;
 
     geometry_msgs::Pose global_pose_offset;
+    Vector7d global_joints_offset;
 };
 
 

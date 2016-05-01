@@ -18,9 +18,9 @@ public:
     void test();
     void set_mode(const int mode);
 
-    const int TORQUE = 1;
-    const int POSITION = 2;
-    const int OPEN_CLOSE = 3;
+    static const int TORQUE = 1;
+    static const int POSITION = 2;
+    static const int OPEN_CLOSE = 3;
 
 private:
     ros::NodeHandle nh_;

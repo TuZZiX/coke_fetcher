@@ -34,9 +34,10 @@ cs_add_library(baxter_arm src/BaxterArmCommander.cpp)
 # may add more of these lines for more nodes from the same package
 cs_add_executable(object_grabber src/object_grabber_as.cpp)
 cs_add_executable(example_object_grabber src/example_object_grabber_action_client.cpp)
+cs_add_executable(coke_grabber src/baxter_arm_test.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
-# target_link_libraries(example my_lib)
+target_link_libraries(coke_grabber baxter_arm baxter_gripper ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()
