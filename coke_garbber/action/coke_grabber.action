@@ -4,7 +4,7 @@
 #returns codes regarding outcome
 
 int32 COKE_CAN = 1
-int32 MOVE_BACK = 0
+int32 MOVE_BACK = 2
 #add more objects here...
 
 #goal:

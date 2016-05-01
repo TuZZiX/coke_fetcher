@@ -3,7 +3,7 @@
 // illustrates use of baxter_cart_move_as, action server called "cartMoveActionServer"
 
 #include <ArmMotionCommander/ArmMotionCommander.h>
-#include <object_grabber/object_grabberAction.h>
+#include <coke_grabber/coke_grabberAction.h>
 
 
 //define a class to encapsulate some of the tedium of populating and sending goals,
@@ -13,9 +13,9 @@ private:
     ros::NodeHandle nh_;
     ArmMotionCommander arm_motion_commander;
     //messages to send/receive cartesian goals / results:
-    object_grabber::object_grabberGoal grab_goal_;
-    object_grabber::object_grabberResult grab_result_;
-    object_grabber::object_grabberFeedback grab_fdbk_;
+    coke_grabber::coke_grabberGoal grab_goal_;
+    coke_grabber::coke_grabberResult grab_result_;
+    coke_grabber::coke_grabberFeedback grab_fdbk_;
     geometry_msgs::PoseStamped object_pose_stamped_;
     int object_code_;
     std_msgs::Bool gripper_open,gripper_close;
@@ -39,9 +39,9 @@ private:
 
     ros::Publisher gripper_publisher;
 
-    actionlib::SimpleActionServer<object_grabber::object_grabberAction> object_grabber_as_;
+    actionlib::SimpleActionServer<coke_grabber::coke_grabberAction> coke_grabber_as_;
     //action callback fnc
-    void executeCB(const actionlib::SimpleActionServer<object_grabber::object_grabberAction>::GoalConstPtr& goal);
+    void executeCB(const actionlib::SimpleActionServer<coke_grabber::coke_grabberAction>::GoalConstPtr& goal);
     void grab_coke(geometry_msgs::PoseStamped object_pose);
     void vertical_cylinder_power_grasp(geometry_msgs::PoseStamped object_pose);
 
@@ -62,7 +62,7 @@ public:
 
 //name this server;
 ObjectGrabber::ObjectGrabber(ros::NodeHandle* nodehandle): nh_(*nodehandle),
-                                                           object_grabber_as_(nh_, "objectGrabberActionServer", boost::bind(&ObjectGrabber::executeCB, this, _1),false),
+                                                           coke_grabber_as_(nh_, "objectGrabberActionServer", boost::bind(&ObjectGrabber::executeCB, this, _1),false),
                                                            arm_motion_commander (nodehandle)
 // in the above initialization, we name the server "example_action"
 //  clients will need to refer to this name to connect with this server
@@ -92,7 +92,7 @@ ObjectGrabber::ObjectGrabber(ros::NodeHandle* nodehandle): nh_(*nodehandle),
     gripper_close.data=true;
     gripper_publisher = nh_.advertise<std_msgs::Bool>("gripper_open_close",1,true);
 
-    object_grabber_as_.start(); //start the server running
+    coke_grabber_as_.start(); //start the server running
     arm_motion_commander.plan_move_to_pre_pose();
 
     hold_offset << 0, -0.2, 0.3;
@@ -260,40 +260,40 @@ void ObjectGrabber::grab_coke(geometry_msgs::PoseStamped object_pose) {
 //callback: at present, hard-coded for Coke-can object;
 //extend this to add more grasp strategies for more objects
 // also, this code does NO error checking (e.g., unreachable); needs to be fixed!
-void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<object_grabber::object_grabberAction>::GoalConstPtr& goal) {
+void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<coke_grabber::coke_grabberAction>::GoalConstPtr& goal) {
 
     int object_code = goal->object_code;
     geometry_msgs::PoseStamped object_pose = goal->object_frame;
     switch(object_code) {
-        case object_grabber::object_grabberGoal::COKE_CAN+1:
+        case coke_grabber::coke_grabberGoal::MOVE_BACK:
             arm_motion_commander.plan_move_to_pre_pose();
-            grab_result_.return_code == object_grabber::object_grabberResult::OBJECT_ACQUIRED;
-            object_grabber_as_.setSucceeded(grab_result_);
+            grab_result_.return_code == coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
+            coke_grabber_as_.setSucceeded(grab_result_);
             break;
-        case object_grabber::object_grabberGoal::COKE_CAN:
+        case coke_grabber::coke_grabberGoal::COKE_CAN:
             vertical_cylinder_power_grasp(object_pose);
             //grab_coke(object_pose);
-            grab_result_.return_code = object_grabber::object_grabberResult::OBJECT_ACQUIRED;
-            object_grabber_as_.setSucceeded(grab_result_);
+            grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
+            coke_grabber_as_.setSucceeded(grab_result_);
             break;
         default:
             ROS_WARN("this object ID is not implemented");
-            grab_result_.return_code = object_grabber::object_grabberResult::FAILED_OBJECT_UNKNOWN;
-            object_grabber_as_.setAborted(grab_result_);
+            grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_OBJECT_UNKNOWN;
+            coke_grabber_as_.setAborted(grab_result_);
     }
 
 
-    //grab_result_.return_code = object_grabber::object_grabberResult::OBJECT_ACQUIRED;
+    //grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
 
-    //object_grabber_as_.setAborted(grab_result_);
-    //object_grabber_as_.setSucceeded(grab_result_);
+    //coke_grabber_as_.setAborted(grab_result_);
+    //coke_grabber_as_.setSucceeded(grab_result_);
 }
 
 
 int main(int argc, char** argv) {
-    ros::init(argc, argv, "object_grabber_action_server_node"); // name this node 
+    ros::init(argc, argv, "coke_grabber_action_server_node"); // name this node
     ros::NodeHandle nh; //standard ros node handle   
-    ObjectGrabber object_grabber_as(&nh); // create an instance of the class "ObjectGrabber", containing an action server
+    ObjectGrabber coke_grabber_as(&nh); // create an instance of the class "ObjectGrabber", containing an action server
     ROS_INFO("going into spin");
     while (ros::ok()) {
         ros::spinOnce(); //normally, can simply do: ros::spin();  
