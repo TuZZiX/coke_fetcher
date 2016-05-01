@@ -12,9 +12,9 @@ BaxterArmCommander::BaxterArmCommander(ros::NodeHandle &nodehandle) : nh_(nodeha
     ROS_INFO("Reference left arm robot frame: %s", left_arm.getPlanningFrame().c_str());
     ROS_INFO("Reference left arm end-effector frame: %s", left_arm.getEndEffectorLink().c_str());
     right_arm.setPlanningTime(5.0);
-    pick_offset << 0, 0, 0.5;
-    hold_offset << 0, -0.5, 0.5;
-    pre_grab_offset << 0, -0.5, 0;
+    pick_offset << 0, 0, 0.3;
+    hold_offset << 0, -0.2, 0.3;
+    pre_grab_offset << 0, -0.2, 0;
     grab_offset << 0, 0, 0;
 
     right_arm_back_pose.position.x = 0.48336029291;
@@ -269,6 +269,10 @@ bool BaxterArmCommander::ArmBack() {
 }
 
 bool BaxterArmCommander::grabCoke(geometry_msgs::Pose coke_pose) {
+    coke_pose.orientation.x = -0.708866454238;
+    coke_pose.orientation.y = 0.17589525363;
+    coke_pose.orientation.z = 0.135739113146;
+    coke_pose.orientation.w = 0.669435660067;
     geometry_msgs::Pose grab_pose = addPosOffset(coke_pose, grab_offset);
     geometry_msgs::Pose pre_grab_pose = addPosOffset(coke_pose, pre_grab_offset);
     geometry_msgs::Pose hold_pose = addPosOffset(coke_pose, hold_offset);

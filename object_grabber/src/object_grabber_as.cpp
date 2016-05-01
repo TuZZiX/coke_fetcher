@@ -31,12 +31,23 @@ private:
     Eigen::Affine3d a_gripper_start_,a_gripper_end_;
     Eigen::Affine3d a_gripper_approach_,a_gripper_depart_, a_gripper_grasp_;
 
+    Eigen::Vector3d pick_offset;
+    Eigen::Vector3d hold_offset;
+    Eigen::Vector3d pre_grab_offset;
+    Eigen::Vector3d grab_offset;
+    geometry_msgs::Pose coke_pose;
+
     ros::Publisher gripper_publisher;
 
     actionlib::SimpleActionServer<object_grabber::object_grabberAction> object_grabber_as_;
     //action callback fnc
     void executeCB(const actionlib::SimpleActionServer<object_grabber::object_grabberAction>::GoalConstPtr& goal);
+    void grab_coke(geometry_msgs::PoseStamped object_pose);
     void vertical_cylinder_power_grasp(geometry_msgs::PoseStamped object_pose);
+
+    geometry_msgs::Pose addPosOffset(geometry_msgs::Pose pose, Eigen::Vector3d offset);
+    geometry_msgs::Pose subPosOffset(geometry_msgs::Pose pose, Eigen::Vector3d offset);
+    geometry_msgs::Pose addPose(geometry_msgs::Pose pose_a, geometry_msgs::Pose pose_b);
 
 public:
 
@@ -58,13 +69,13 @@ ObjectGrabber::ObjectGrabber(ros::NodeHandle* nodehandle): nh_(*nodehandle),
 {
     ROS_INFO("in constructor of ObjectGrabber");
     // do any other desired initializations here, as needed
-    gripper_table_z_ = 0.00; //gripper origin height above torso for grasp of cyl on table
+    gripper_table_z_ = 0; //gripper origin height above torso for grasp of cyl on table
     L_approach_ = 0.25; //distance to slide towards cylinder
     z_depart_ = 0.2; //height to lift cylinder
 
     //define a gripper orientation for power-grasp approach of upright cylinder
     gripper_n_des_ << 0, 0, 1; //gripper x-axis points straight up;
-    gripper_theta_ = M_PI/3.0; //approach yaw angle--try this, reaching out and to the left
+    gripper_theta_ = M_PI/2.0; //approach yaw angle--try this, reaching out and to the left
     gripper_b_des_ << cos(gripper_theta_), sin(gripper_theta_), 0;
     gripper_t_des_ = gripper_b_des_.cross(gripper_n_des_);
     R_gripper_vert_cyl_grasp_.col(0) = gripper_n_des_;
@@ -83,10 +94,50 @@ ObjectGrabber::ObjectGrabber(ros::NodeHandle* nodehandle): nh_(*nodehandle),
 
     object_grabber_as_.start(); //start the server running
     arm_motion_commander.plan_move_to_pre_pose();
-}
 
+    hold_offset << 0, -0.2, 0.3;
+    pre_grab_offset << 0, -0.2, 0;
+    grab_offset << 0, 0, 0;
+    pick_offset << 0, 0, 0.3;
+
+    coke_pose.position.x = 0;
+    coke_pose.position.y = 0;
+    coke_pose.position.z = -0.05;
+    coke_pose.orientation.x = -0.708866454238;
+    coke_pose.orientation.y = 0.17589525363;
+    coke_pose.orientation.z = 0.135739113146;
+    coke_pose.orientation.w = 0.669435660067;
+}
+geometry_msgs::Pose ObjectGrabber::addPose(geometry_msgs::Pose pose_a, geometry_msgs::Pose pose_b) {
+    geometry_msgs::Pose result;
+    result.position.x=pose_a.position.x+pose_b.position.x;
+    result.position.y=pose_a.position.y+pose_b.position.y;
+    result.position.z=pose_a.position.z+pose_b.position.z;
+
+    result.orientation.x=pose_b.orientation.x;
+    result.orientation.y=pose_b.orientation.y;
+    result.orientation.z=pose_b.orientation.z;
+    result.orientation.w=pose_b.orientation.w;
+    return result;
+}
+geometry_msgs::Pose ObjectGrabber::addPosOffset(geometry_msgs::Pose pose, Eigen::Vector3d offset) {
+    geometry_msgs::Pose result;
+    result.position.x=pose.position.x+offset[0];
+    result.position.y=pose.position.y+offset[1];
+    result.position.z=pose.position.z+offset[2];
+    result.orientation=pose.orientation;
+    return result;
+}
+geometry_msgs::Pose ObjectGrabber::subPosOffset(geometry_msgs::Pose pose, Eigen::Vector3d offset) {
+    geometry_msgs::Pose result;
+    result.position.x=pose.position.x-offset[0];
+    result.position.y=pose.position.y-offset[1];
+    result.position.z=pose.position.z-offset[2];
+    result.orientation=pose.orientation;
+    return result;
+}
 void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped object_pose) {
-    geometry_msgs::PoseStamped des_gripper_grasp_pose, des_gripper_approach_pose, des_gripper_depart_pose;
+    geometry_msgs::PoseStamped des_gripper_grasp_pose, des_gripper_approach_pose, des_gripper_depart_pose, des_gripper_hold_pose;
     //make sure the object pose is in the torso frame; transform if necessary;
     //skip this for now
     int rtn_val;
@@ -124,6 +175,7 @@ void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obj
     int planner_rtn_code;
     des_gripper_approach_pose.header.frame_id = "torso";
     des_gripper_approach_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_approach_);
+    des_gripper_approach_pose.pose = addPose(des_gripper_approach_pose.pose, coke_pose);
     planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_approach_pose);
 
     //try to move here:
@@ -132,6 +184,7 @@ void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obj
     //slide to can:
     des_gripper_grasp_pose.header.frame_id = "torso";
     des_gripper_grasp_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_grasp_);
+    des_gripper_grasp_pose.pose = addPose(des_gripper_grasp_pose.pose, coke_pose);
     planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
     arm_motion_commander.rt_arm_execute_planned_path();
 
@@ -143,10 +196,66 @@ void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obj
     //depart vertically:
     des_gripper_depart_pose.header.frame_id = "torso";
     des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
+    des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
     planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
+    arm_motion_commander.rt_arm_execute_planned_path();
+
+    des_gripper_hold_pose.header.frame_id = "torso";
+    des_gripper_hold_pose.pose = addPosOffset(des_gripper_grasp_pose.pose, hold_offset);
+    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
     arm_motion_commander.rt_arm_execute_planned_path();
 }
 
+void ObjectGrabber::grab_coke(geometry_msgs::PoseStamped object_pose) {
+    geometry_msgs::PoseStamped des_gripper_grasp_pose, des_gripper_approach_pose, des_gripper_depart_pose, des_gripper_hold_pose;
+    //make sure the object pose is in the torso frame; transform if necessary;
+    //skip this for now
+    int rtn_val;
+    //send a command to plan a joint-space move to pre-defined pose:
+    rtn_val = arm_motion_commander.plan_move_to_pre_pose();
+    //send command to execute planned motion
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    //inquire re/ right-arm joint angles:
+    rtn_val=arm_motion_commander.rt_arm_request_q_data();
+    gripper_publisher.publish(gripper_open);
+
+    //start w/ a jnt-space move from current pose to approach pose:
+    int planner_rtn_code;
+    des_gripper_approach_pose.header.frame_id = "torso";
+    des_gripper_grasp_pose.header.frame_id = "torso";
+    des_gripper_depart_pose.header.frame_id = "torso";
+    des_gripper_hold_pose.header.frame_id = "torso";
+
+    object_pose.pose = addPose(object_pose.pose, coke_pose);
+
+    des_gripper_grasp_pose.pose = addPosOffset(object_pose.pose, grab_offset);
+    des_gripper_approach_pose.pose = addPosOffset(object_pose.pose, pre_grab_offset);
+    des_gripper_depart_pose.pose = addPosOffset(object_pose.pose, pick_offset);
+    des_gripper_hold_pose.pose = addPosOffset(object_pose.pose, hold_offset);
+
+    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
+    arm_motion_commander.rt_arm_execute_planned_path();
+
+    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_approach_pose);
+    //try to move here:
+    arm_motion_commander.rt_arm_execute_planned_path();
+
+    //slide to can:
+    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
+    arm_motion_commander.rt_arm_execute_planned_path();
+
+    //close the gripper:
+    gripper_publisher.publish(gripper_close);
+    //wait for gripper to close:
+    ros::Duration(2.0).sleep();
+
+    //depart vertically:
+    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
+    arm_motion_commander.rt_arm_execute_planned_path();
+
+    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
+    arm_motion_commander.rt_arm_execute_planned_path();
+}
 
 //callback: at present, hard-coded for Coke-can object;
 //extend this to add more grasp strategies for more objects
@@ -158,9 +267,12 @@ void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<object_grabber
     switch(object_code) {
         case object_grabber::object_grabberGoal::COKE_CAN+1:
             arm_motion_commander.plan_move_to_pre_pose();
+            grab_result_.return_code == object_grabber::object_grabberResult::OBJECT_ACQUIRED;
+            object_grabber_as_.setSucceeded(grab_result_);
             break;
         case object_grabber::object_grabberGoal::COKE_CAN:
             vertical_cylinder_power_grasp(object_pose);
+            //grab_coke(object_pose);
             grab_result_.return_code = object_grabber::object_grabberResult::OBJECT_ACQUIRED;
             object_grabber_as_.setSucceeded(grab_result_);
             break;

@@ -41,13 +41,18 @@ void objectCallback(const object_recognition_msgs::RecognizedObjectArray objects
             }
         }
     }
-    coke_pose.pose = objects_msg.objects[id].pose.pose.pose;
-    coke_conficent = objects_msg.objects[id].confidence;
-    ROS_INFO("Best Similarity = %f ", objects_msg.objects[id].confidence);
-    ROS_INFO("pose x is: %f", objects_msg.objects[id].pose.pose.pose.position.x);
-    ROS_INFO("pose y is: %f", objects_msg.objects[id].pose.pose.pose.position.y);
-    ROS_INFO("pose z is: %f", objects_msg.objects[id].pose.pose.pose.position.z);
-    ROS_INFO("---------------------------------");
+    if (id >= 0) {
+        coke_pose.pose = objects_msg.objects[id].pose.pose.pose;
+        coke_conficent = objects_msg.objects[id].confidence;
+        ROS_INFO("Best Similarity = %f ", objects_msg.objects[id].confidence);
+        ROS_INFO("pose x is: %f", objects_msg.objects[id].pose.pose.pose.position.x);
+        ROS_INFO("pose y is: %f", objects_msg.objects[id].pose.pose.pose.position.y);
+        ROS_INFO("pose z is: %f", objects_msg.objects[id].pose.pose.pose.position.z);
+        ROS_INFO("---------------------------------");
+    } else {
+        confident = 0;
+    }
+    
 }
 
 void planeCallback(const object_recognition_msgs::TableArray plane_msg) {
@@ -71,7 +76,6 @@ void objectGrabberDoneCb(const actionlib::SimpleClientGoalState& state,
 int main(int argc, char** argv) {
     ros::init(argc, argv, "example_object_grabber_action_client"); // name this node 
     ros::NodeHandle nh; //standard ros node handle    
-
     ros::Subscriber object_sub = nh.subscribe("/recognized_object_array", 1, &objectCallback);
     ros::Subscriber plane_sub = nh.subscribe("/table_array", 1, &planeCallback);
     actionlib::SimpleActionClient<object_grabber::object_grabberAction> object_grabber_ac("objectGrabberActionServer", true);
@@ -107,31 +111,37 @@ int main(int argc, char** argv) {
     ros::Duration loop_timer(3.0);
 
     while (ros::ok()) {
-        //stuff a goal message:
-        bool tferr = true;
-        while (tferr) {
-            tferr = false;
-            try {
-                tf_listener.transformPose("torso", coke_pose, transed_pose);
-            } catch (tf::TransformException &exception) {
-                ROS_ERROR("%s", exception.what());
-                tferr = true;
-                ros::Duration(0.1).sleep(); // sleep for half a second
-                ros::spinOnce();
-            }
-        }
-        ROS_INFO("tf is good"); //  tf-listener found a complete chain from sensor to world; ready to roll
-        object_grabber_goal.object_code = object_grabber::object_grabberGoal::COKE_CAN; //specify the object to be grabbed
-        object_grabber_goal.object_frame = transed_pose;
-        ROS_INFO("sending goal: ");
-        object_grabber_ac.sendGoal(object_grabber_goal,&objectGrabberDoneCb); // we could also name additional callback functions here, if desired
-        //    action_client.sendGoal(goal, &doneCb, &activeCb, &feedbackCb); //e.g., like this
-
+        object_grabber_goal.object_code = object_grabber::object_grabberGoal::COKE_CAN + 1;
+        object_grabber_ac.sendGoal(object_grabber_goal,&objectGrabberDoneCb);
         bool finished_before_timeout = object_grabber_ac.waitForResult();
-        //bool finished_before_timeout = action_client.waitForResult(); // wait forever...
-        if (!finished_before_timeout) {
-            ROS_WARN("giving up waiting on result ");
-            return 1;
+        if (coke_conficent > 0.8)
+        {
+            //stuff a goal message:
+            bool tferr = true;
+            while (tferr) {
+                tferr = false;
+                try {
+                    tf_listener.transformPose("torso", coke_pose, transed_pose);
+                } catch (tf::TransformException &exception) {
+                    ROS_ERROR("%s", exception.what());
+                    tferr = true;
+                    ros::Duration(0.1).sleep(); // sleep for half a second
+                    ros::spinOnce();
+                }
+            }
+            ROS_INFO("tf is good"); //  tf-listener found a complete chain from sensor to world; ready to roll
+            object_grabber_goal.object_code = object_grabber::object_grabberGoal::COKE_CAN; //specify the object to be grabbed
+            object_grabber_goal.object_frame = transed_pose;
+            ROS_INFO("sending goal: ");
+            object_grabber_ac.sendGoal(object_grabber_goal,&objectGrabberDoneCb); // we could also name additional callback functions here, if desired
+            //    action_client.sendGoal(goal, &doneCb, &activeCb, &feedbackCb); //e.g., like this
+
+            finished_before_timeout = object_grabber_ac.waitForResult();
+            //bool finished_before_timeout = action_client.waitForResult(); // wait forever...
+            if (!finished_before_timeout) {
+                ROS_WARN("giving up waiting on result ");
+                return 1;
+            }
         }
         ros::spinOnce();
         loop_timer.sleep();
