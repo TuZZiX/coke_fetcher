@@ -29,7 +29,7 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 # Libraries: uncomment the following and edit arguments to create a new library
 cs_add_library(arm_commander src/ArmMotionCommander.cpp)
 cs_add_library(baxter_gripper src/BaxterGripper.cpp)
-cs_add_library(baxter_arm src/BaxterArmCommander.cpp)
+cs_add_library(simple_coke_finder src/SimpleCokeFinder.cpp)
 
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package
