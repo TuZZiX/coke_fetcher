@@ -3,8 +3,7 @@
 #returns codes regarding outcome
 
 int32 HOME = 0
-int32 TABLE_1 = 1
-int32 TABLE_2 = 2
+int32 TABLE = 1
 int32 COORDS = 10
 #add more locations here...
 

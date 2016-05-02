@@ -1,8 +1,13 @@
 # navigator
 
-Your description goes here
+Modified version of PS8.  Many unused nodes and code were removed.
 
 ## Example usage
 
-## Running tests/demos
-    
+```
+$ rosrun beta_navigator beta_navigator
+```
+
+Make calls using `beta_navigator/navigator.action` action messages.
+
+This should all be coordinated by the `coordinator` package.

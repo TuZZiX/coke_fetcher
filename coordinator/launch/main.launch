@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<launch>
+  <node
+	  pkg="beta_navigator"
+	  type="beta_navigator"
+	  name="$(anon beta_navigator)"
+	  output="screen"
+	  />
+
+  <!-- Insert your nodes here. -->
+  
+  <node
+	  pkg="rviz"
+	  type="rviz"
+	  name="rviz"
+	  args="-d $(find beta_navigator)/launch/main.rviz"
+	  />
+</launch>
