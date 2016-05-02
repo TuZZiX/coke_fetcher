@@ -543,6 +543,25 @@ void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<coke_grabber::
                 coke_grabber_as_.setAborted(grab_result_);
             }
             break;
+        case coke_grabber::coke_grabberGoal::RIGHT_TO_POSE:
+            ret = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(object_pose);
+            if (ret==cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+                rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+            }
+            if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
+                coke_grabber_as_.setSucceeded(grab_result_);
+            } else if (ret == cartesian_planner::baxter_cart_moveResult::RT_ARM_PATH_NOT_VALID) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_CANNOT_REACH;
+                coke_grabber_as_.setAborted(grab_result_);
+            } else if (ret == cartesian_planner::baxter_cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_TIMEOUT;
+                coke_grabber_as_.setAborted(grab_result_);
+            } else {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_UNKNOWN;
+                coke_grabber_as_.setAborted(grab_result_);
+            }
+            break;
         default:
             ROS_WARN("this object ID is not implemented");
             grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_OBJECT_UNKNOWN;

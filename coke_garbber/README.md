@@ -66,14 +66,21 @@ coke_grabber_ac.waitForResult();
 If you want to place coke to a place:
 ```
 coke_grabber_goal.object_code = coke_grabber::coke_grabberGoal::DROP_COKE;
-coke_grabber_goal.object_frame = place_pose;	//put the pose of coke can here
+coke_grabber_goal.object_frame = place_pose;	//put the pose to place the coke here
 coke_grabber_ac.sendGoal(coke_grabber_goal, &objectGrabberDoneCb);
 coke_grabber_ac.waitForResult();
 ```
 If you want to give coke to a people:
 ```
 coke_grabber_goal.object_code = coke_grabber::coke_grabberGoal::GIVE_TO_HUMAN;
-coke_grabber_goal.object_frame = human_pose;	//put the pose of coke can here
+coke_grabber_goal.object_frame = human_pose;	//put the pose the that towards human here
+coke_grabber_ac.sendGoal(coke_grabber_goal, &objectGrabberDoneCb);
+coke_grabber_ac.waitForResult();
+```
+If you want to move arm to a certain pose:
+```
+coke_grabber_goal.object_code = coke_grabber::coke_grabberGoal::RIGHT_TO_POSE;
+coke_grabber_goal.object_frame = pose you want;	//put the pose want to move here
 coke_grabber_ac.sendGoal(coke_grabber_goal, &objectGrabberDoneCb);
 coke_grabber_ac.waitForResult();
 ```

@@ -7,6 +7,8 @@ int32 COKE_CAN = 1
 int32 MOVE_BACK = 2
 int32 DROP_COKE = 3
 int32 GIVE_TO_HUMAN = 4
+int32 RIGHT_TO_POSE = 5
+int32 LEFT_TO_POSE = 6
 #add more objects here...
 
 #goal:
