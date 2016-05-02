@@ -546,7 +546,7 @@ void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<coke_grabber::
         case coke_grabber::coke_grabberGoal::RIGHT_TO_POSE:
             ret = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(object_pose);
             if (ret==cartesian_planner::baxter_cart_moveResult::SUCCESS) {
-                rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+                ret=arm_motion_commander.rt_arm_execute_planned_path();
             }
             if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
