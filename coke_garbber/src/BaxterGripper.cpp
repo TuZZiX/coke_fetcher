@@ -9,6 +9,7 @@ BaxterGripper::BaxterGripper(ros::NodeHandle &nodehandle) : nh_(nodehandle) {
     position_pub = nh_.advertise<std_msgs::Int16>("/dynamixel_motor1_cmd", 1);
     mode_pub= nh_.advertise<std_msgs::Bool>("/dynamixel_motor1_mode", 1);
     open_close_pub = nh_.advertise<std_msgs::Bool>("/gripper_open_close", 1);
+    set_mode(OPEN_CLOSE);
 }
 
 void BaxterGripper::set_mode(const int mode) {

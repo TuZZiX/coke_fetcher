@@ -5,7 +5,8 @@
 
 int32 COKE_CAN = 1
 int32 MOVE_BACK = 2
-int32 DROP_OBJECT = 3
+int32 DROP_COKE = 3
+int32 GIVE_TO_HUMAN = 4
 #add more objects here...
 
 #goal:
