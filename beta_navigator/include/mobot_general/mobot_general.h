@@ -36,7 +36,7 @@ private:
     double yaw_rate; //0.5 rad/sec yaw rate command
     geometry_msgs::Twist twist_cmd; //this is the message type required to send twist commands to STDR
 public:
-    RobotCommander(ros::NodeHandle* nodehandle);
+    RobotCommander(ros::NodeHandle& nodehandle);
     void stop();
 
     void turn(double rad);

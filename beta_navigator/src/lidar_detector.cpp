@@ -3,7 +3,7 @@
 
 #include <ros/ros.h>                    /* Must include this for all ROS cpp projects */
 #include <sensor_msgs/LaserScan.h>
-#include <p8_beta/lidar.h>
+#include <beta_navigator/lidar.h>
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>              /* boolean message */
 
@@ -55,7 +55,7 @@ ros::Publisher	opt_dir_publisher_;
 
      int debug = 0;
 
-    p8_beta::lidar alarm_info_msg;
+    beta_navigator::lidar alarm_info_msg;
     std_msgs::Bool lidar_alarm_msg;
     std_msgs::Float64 opt_dir_msg;
 
@@ -255,7 +255,7 @@ ros::Publisher	opt_dir_publisher_;
             alarm_info_msg.g_distance = range_max_;
             alarm_info_msg.alarm_dir = 0.0;
         }
-        lidar_alarm_msg.data = alarm_info_msg.f_alarm;
+        lidar_alarm_msg.data = alarm_info_msg.g_alarm;
         lidar_alarm_publisher_.publish( lidar_alarm_msg );
         alarm_info_publisher_.publish( alarm_info_msg );
         opt_dir_msg.data = opt_dir;
@@ -301,7 +301,7 @@ int main( int argc, char **argv )
     /* create a Subscriber object and have it subscribe to the lidar topic */
     ros::Publisher pub = nh.advertise<std_msgs::Bool>( "lidar_alarm", 1 );
     lidar_alarm_publisher_ = pub;                   /* let's make this global, so callback can use it */
-    ros::Publisher pub2 = nh.advertise<p8_beta::lidar>( "alarm_info", 1 );
+    ros::Publisher pub2 = nh.advertise<beta_navigator::lidar>( "alarm_info", 1 );
     alarm_info_publisher_ = pub2;
     ros::Subscriber lidar_subscriber = nh.subscribe( "scan", 1, laserCallback );
     ros::Publisher pub3 = nh.advertise<std_msgs::Float64>( "opt_direction", 1 );

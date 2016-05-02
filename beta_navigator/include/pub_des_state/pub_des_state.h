@@ -6,23 +6,17 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
 #include <std_srvs/Trigger.h>
-#include <p8_beta/path.h>
+#include <beta_navigator/path.h>
 #include <std_msgs/Float64.h>
-
-//constants and parameters:
-const double dt = 0.02; //send desired-state messages at fixed rate, e.g. 0.02 sec = 50Hz
-//dynamic parameters: should be tuned for target system
-const double accel_max = 1.0; //1m/sec^2
-const double alpha_max = 0.2; // rad/sec^2
-const double speed_max = 1.0; //1 m/sec
-const double omega_max = 1.0; //1 rad/sec
-const double path_move_tol = 0.01; // if path points are within 1cm, fuggidaboutit
+#include <nav_msgs/Odometry.h>
 
 const int E_STOPPED = 0; //define some mode keywords
 const int DONE_W_SUBGOAL = 1;
 const int PURSUING_SUBGOAL = 2;
 const int HALTING = 3;
-const int RECOVERING=4;
+const int RECOVERING = 4;
+const double default_max_odom_draft = 2.0;
+const double default_max_pos_draft = 2.0;
 
 class DesStatePublisher {
 private:
@@ -41,7 +35,11 @@ private:
     geometry_msgs::PoseStamped start_pose_;
     geometry_msgs::PoseStamped end_pose_;
     geometry_msgs::PoseStamped current_pose_;
+    geometry_msgs::Twist current_twist_;
+    nav_msgs::Odometry current_odom_;
     std_msgs::Float64 float_msg_;
+    ros::Time last_cb_time_;
+
     double des_psi_;
     std::queue<geometry_msgs::PoseStamped> path_queue_; //a C++ "queue" object, stores vertices as Pose points in a FIFO queue
     int motion_mode_;
@@ -59,9 +57,15 @@ private:
 
     bool lidar_alarm_;
     bool is_alarmed_;
-    double opt_dir_;
+    bool odomCB_;
+    bool enable_replanning_;
 
-    geometry_msgs::Twist current_twist_;
+    double time_interval_;
+    double distance_interval_;
+    double pose_draft_;
+
+    double max_odom_draft;
+    double max_pos_draft;
 
     // some objects to support service and publisher
     ros::ServiceServer estop_service_;
@@ -73,10 +77,11 @@ private:
     ros::Publisher des_psi_publisher_;
 
     ros::Subscriber alarm_subscriber_;
-    ros::Subscriber direction_subscriber_;
+    ros::Subscriber odom_subscriber_;
 
     //a trajectory-builder object; 
-    TrajBuilder trajBuilder_; 
+    TrajBuilder trajBuilder_;
+    ros::Rate looprate;
 
     // member methods:
     void initializePublishers();
@@ -84,20 +89,36 @@ private:
     bool estopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
     bool clearEstopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
     bool flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
-    bool appendPathQueueCB(p8_beta::pathRequest& request,p8_beta::pathResponse& response);
+    bool appendPathQueueCB(beta_navigator::pathRequest& request,beta_navigator::pathResponse& response);
     void alarmCB(const std_msgs::Bool& alarm_msg);
-    void directionCB(const std_msgs::Float64& direction_msg);
+    void odomCallback(const nav_msgs::Odometry& odom_msg);
 
 public:
     DesStatePublisher(ros::NodeHandle& nh);//constructor
     int get_motion_mode() {return motion_mode_;}
     void set_motion_mode(int mode) {motion_mode_ = mode;}
     bool get_estop_trigger() { return e_stop_trigger_;}
+    void set_estop_trigger() { e_stop_trigger_ = true;}
     void reset_estop_trigger() { e_stop_trigger_ = false;}
     void set_init_pose(double x,double y, double psi);
     void pub_next_state();
-    void append_path_queue(geometry_msgs::PoseStamped pose) { path_queue_.push(pose); }
-    void append_path_queue(double x, double y, double psi) 
-        { path_queue_.push(trajBuilder_.xyPsi2PoseStamped(x,y,psi)); }
+    nav_msgs::Odometry get_odom();
+    void append_path_queue(geometry_msgs::PoseStamped pose) {
+        path_queue_.push(pose); }
+    void append_path_queue(double x, double y, double psi) {
+        path_queue_.push(trajBuilder_.xyPsi2PoseStamped(x,y,psi)); }
+    void loop_sleep() {
+        looprate.sleep(); }
+    void sync_pose() {
+        current_pose_.pose = current_odom_.pose.pose; }
+    void enable_replanning() {
+        enable_replanning_ = true; }
+    void disable_replanning() {
+        enable_replanning_ = false; }
+    void flush_path() {
+        while (!path_queue_.empty()) {
+            path_queue_.pop();
+        }
+    }
 };
 #endif

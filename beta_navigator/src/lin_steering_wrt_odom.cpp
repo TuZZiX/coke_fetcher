@@ -134,7 +134,7 @@ void SteeringController::initializePublishers()
 {
     ROS_INFO("Initializing Publishers: cmd_vel and cmd_vel_stamped");
     cmd_publisher_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1, true); // talks to the robot!
-    cmd_publisher2_ = nh_.advertise<geometry_msgs::TwistStamped>("cmd_vel_stamped",1, true); //alt topic, includes time stamp
+    //cmd_publisher2_ = nh_.advertise<geometry_msgs::TwistStamped>("cmd_vel_stamped",1, true); //alt topic, includes time stamp
     //steering_errs_publisher_ =  nh_.advertise<std_msgs::Float32MultiArray>("steering_errs",1, true);
 }
 
@@ -272,7 +272,7 @@ void SteeringController::lin_steering_algorithm() {
     twist_cmd2_.twist = twist_cmd_; // copy the twist command into twist2 message
     twist_cmd2_.header.stamp = ros::Time::now(); // look up the time and put it in the header 
     cmd_publisher_.publish(twist_cmd_);  
-    cmd_publisher2_.publish(twist_cmd2_);     
+    //cmd_publisher2_.publish(twist_cmd2_);
 }
 
 int main(int argc, char** argv) 

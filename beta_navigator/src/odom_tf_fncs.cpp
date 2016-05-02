@@ -386,8 +386,6 @@ void OdomTf::amclCallback(const geometry_msgs::PoseWithCovarianceStamped& amcl_r
     br_.sendTransform(stfAmclBaseLinkWrtMap_);
     nav_msgs::Odometry amcl_odom;
     amcl_odom.header = current_odom_.header;
-    amcl_odom.header.stamp = ros::Time::now();
-    amcl_odom.header.frame_id = "amcl_odom";
     amcl_odom.child_frame_id = current_odom_.child_frame_id;
     amcl_odom.twist = current_odom_.twist;
     amcl_odom.pose = amcl_rcvd.pose;

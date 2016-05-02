@@ -3,10 +3,10 @@
 #returns codes regarding outcome
 
 int32 HOME = 0
-int32 TABLE= 1
+int32 TABLE_1 = 1
+int32 TABLE_2 = 2
+int32 COORDS = 10
 #add more locations here...
-
-int32 COORDS=100
 
 #goal:
 int32 location_code
@@ -14,9 +14,12 @@ geometry_msgs/PoseStamped desired_pose
 ---
 #result definition
 #  response codes...
-int32 DESIRED_POSE_ACHIEVED=0
-int32 FAILED_CANNOT_REACH_DES_POSE=1
-int32 DESTINATION_CODE_UNRECOGNIZED=1
+int32 DESIRED_POSE_ACHIEVED = 0
+int32 FAILED_CANNOT_REACH_DES_POSE = 1
+int32 FAILED_BLOCKED = 2
+int32 FAILED_TIMEOUT = 3
+int32 ESTOPED = 4
+int32 DESTINATION_CODE_UNRECOGNIZED = 10
 #could add more informative failure codes here...
 
 int32 return_code

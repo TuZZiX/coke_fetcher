@@ -79,7 +79,7 @@ std::vector<double> quat2euler(geometry_msgs::Quaternion quaternion) {
     return euler;
 }
 
-RobotCommander::RobotCommander(ros::NodeHandle *nodehandle) : nh_(*nodehandle) {
+RobotCommander::RobotCommander(ros::NodeHandle &nodehandle) : nh_(nodehandle) {
     sample_dt = 0.001;
     speed = 1.0; // 1m/s speed command
     yaw_rate = 0.5; //0.5 rad/sec yaw rate command

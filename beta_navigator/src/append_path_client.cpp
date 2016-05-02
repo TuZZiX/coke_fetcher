@@ -2,7 +2,7 @@
 // illustrates how to send a request to the append_path_queue_service service
 
 #include <ros/ros.h>
-#include <p8_beta/path.h>
+#include <beta_navigator/path.h>
 #include <iostream>
 #include <string>
 #include <nav_msgs/Path.h>
@@ -23,7 +23,7 @@ geometry_msgs::Quaternion convertPlanarPhi2Quaternion(double phi) {
 int main(int argc, char** argv) {
     ros::init(argc, argv, "append_path_client");
     ros::NodeHandle n;
-    ros::ServiceClient client = n.serviceClient<p8_beta::path>("append_path_queue_service");
+    ros::ServiceClient client = n.serviceClient<beta_navigator::path>("append_path_queue_service");
     ros::ServiceClient flush = n.serviceClient<std_srvs::Trigger>("flush_path_queue_service");
     ros::ServiceClient estop = n.serviceClient<std_srvs::Trigger>("estop_service");
     ros::ServiceClient clear_estop = n.serviceClient<std_srvs::Trigger>("clear_estop_service");
@@ -36,7 +36,7 @@ int main(int argc, char** argv) {
       ros::spinOnce();
     }
     //ROS_INFO("connected client to service");
-    p8_beta::path path_srv;
+    beta_navigator::path path_srv;
 
     if (argc < 2) return 1;
 

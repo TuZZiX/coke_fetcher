@@ -105,31 +105,15 @@ void SteeringController::initializePublishers()
     lat_err_publisher_ = nh_.advertise<std_msgs::Float32>("lateral_err", 1, true);
 }
 
-//receive publications from gazebo via node mobot_gazebo_state;
-// this stands in for a state estimator; for a real system need to create such a node
-/*
-void SteeringController::gazeboPoseCallback(const geometry_msgs::Pose& gazebo_pose) {
-   state_x_ = gazebo_pose.position.x; //copy the state to member variables of this object
-   state_y_ = gazebo_pose.position.y;
-   state_quat_ = gazebo_pose.orientation;
-   state_psi_ = convertPlanarQuat2Phi(state_quat_);
-}*/
 void SteeringController::odomCallback(const nav_msgs::Odometry& odom_rcvd) {
     // copy some of the components of the received message into member vars
     // we care about speed and spin, as well as position estimates x,y and heading
-    //current_odom_ = odom_rcvd; // save the entire message
     // but also pick apart pieces, for ease of use
-    //state_pose_  = odom_rcvd.pose.pose;
-    //state_vel_   = odom_rcvd.twist.twist.linear.x;
-    //state_omega_ = odom_rcvd.twist.twist.angular.z;
     state_x_     = odom_rcvd.pose.pose.position.x;
     state_y_     = odom_rcvd.pose.pose.position.y;
     state_quat_  = odom_rcvd.pose.pose.orientation;
     //odom publishes orientation as a quaternion.  Convert this to a simple heading
     state_psi_ = convertPlanarQuat2Phi(state_quat_); // cheap conversion from quaternion to heading for planar motion
-    // let's put odom x,y in an Eigen-style 2x1 vector; convenient for linear algebra operations
-    //odom_xy_vec_(0) = odom_x_;
-    //odom_xy_vec_(1) = odom_y_;
 }
 
 //use this if a desired state is being published
@@ -198,7 +182,11 @@ void SteeringController::mobot_nl_steering() {
     double strategy_psi = psi_strategy(lateral_err_); //heading command, based on NL algorithm
     controller_omega = omega_cmd_fnc(strategy_psi, state_psi_, des_state_psi_);
 
-    controller_speed = MAX_SPEED ; //des_state_speed_ + K_TRIP_DIST*abs(trip_dist_err) default...should speed up/slow down appropriately
+    if (des_state_speed_ == 0 && trip_dist_err < 10 && trip_dist_err > -10) {
+        controller_speed = 0;
+    } else {
+        controller_speed = MAX_SPEED ; //des_state_speed_ + K_TRIP_DIST*abs(trip_dist_err) default...should speed up/slow down appropriately
+    }
     // send out our speed/spin commands:
     twist_cmd_.linear.x = controller_speed;
     twist_cmd_.angular.z = controller_omega;
