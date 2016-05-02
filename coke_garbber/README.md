@@ -63,7 +63,20 @@ coke_grabber_goal.object_code = coke_grabber::coke_grabberGoal::MOVE_BACK;
 coke_grabber_ac.sendGoal(coke_grabber_goal,&objectGrabberDoneCb);
 coke_grabber_ac.waitForResult();
 ```
-
+If you want to place coke to a place:
+```
+coke_grabber_goal.object_code = coke_grabber::coke_grabberGoal::DROP_COKE;
+coke_grabber_goal.object_frame = place_pose;	//put the pose of coke can here
+coke_grabber_ac.sendGoal(coke_grabber_goal, &objectGrabberDoneCb);
+coke_grabber_ac.waitForResult();
+```
+If you want to give coke to a people:
+```
+coke_grabber_goal.object_code = coke_grabber::coke_grabberGoal::GIVE_TO_HUMAN;
+coke_grabber_goal.object_frame = human_pose;	//put the pose of coke can here
+coke_grabber_ac.sendGoal(coke_grabber_goal, &objectGrabberDoneCb);
+coke_grabber_ac.waitForResult();
+```
 ###Moveit! library
 There is an class in *BaxterArmCommander.cpp* called *BaxterArmCommander*, it contains methods for control both arm, only useful method are shown there. Since all the function named quite straight forward, looking at function name would be a good way to show how to use it 
 

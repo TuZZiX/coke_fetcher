@@ -35,6 +35,7 @@ private:
     Eigen::Vector3d hold_offset;
     Eigen::Vector3d pre_grab_offset;
     Eigen::Vector3d grab_offset;
+    Eigen::Vector3d give_offset;
     geometry_msgs::Pose coke_pose;
 
     ros::Publisher gripper_publisher;
@@ -42,8 +43,10 @@ private:
     actionlib::SimpleActionServer<coke_grabber::coke_grabberAction> coke_grabber_as_;
     //action callback fnc
     void executeCB(const actionlib::SimpleActionServer<coke_grabber::coke_grabberAction>::GoalConstPtr& goal);
-    void grab_coke(geometry_msgs::PoseStamped object_pose);
-    void vertical_cylinder_power_grasp(geometry_msgs::PoseStamped object_pose);
+    int grab_coke(geometry_msgs::PoseStamped object_pose);
+    int vertical_cylinder_power_grasp(geometry_msgs::PoseStamped object_pose);
+    int drop_coke(geometry_msgs::PoseStamped object_pose);
+    int give_human(geometry_msgs::PoseStamped object_pose);
 
     geometry_msgs::Pose addPosOffset(geometry_msgs::Pose pose, Eigen::Vector3d offset);
     geometry_msgs::Pose subPosOffset(geometry_msgs::Pose pose, Eigen::Vector3d offset);
@@ -99,6 +102,7 @@ ObjectGrabber::ObjectGrabber(ros::NodeHandle* nodehandle): nh_(*nodehandle),
     pre_grab_offset << 0, -0.2, 0;
     grab_offset << 0, 0, 0;
     pick_offset << 0, 0, 0.3;
+    give_offset << 0, 0, 0.3;
 
     coke_pose.position.x = 0;
     coke_pose.position.y = 0;
@@ -136,20 +140,26 @@ geometry_msgs::Pose ObjectGrabber::subPosOffset(geometry_msgs::Pose pose, Eigen:
     result.orientation=pose.orientation;
     return result;
 }
-void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped object_pose) {
+int ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped object_pose) {
     geometry_msgs::PoseStamped des_gripper_grasp_pose, des_gripper_approach_pose, des_gripper_depart_pose, des_gripper_hold_pose;
     //make sure the object pose is in the torso frame; transform if necessary;
     //skip this for now
     int rtn_val;
     //send a command to plan a joint-space move to pre-defined pose:
     rtn_val = arm_motion_commander.plan_move_to_pre_pose();
-
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     //send command to execute planned motion
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     //inquire re/ right-arm joint angles:
     rtn_val=arm_motion_commander.rt_arm_request_q_data();
-
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     Eigen::Affine3d object_affine;
     object_affine =
             arm_motion_commander.transformPoseToEigenAffine3d(object_pose.pose);
@@ -172,22 +182,28 @@ void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obj
     gripper_publisher.publish(gripper_open);
 
     //start w/ a jnt-space move from current pose to approach pose:
-    int planner_rtn_code;
     des_gripper_approach_pose.header.frame_id = "torso";
     des_gripper_approach_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_approach_);
     des_gripper_approach_pose.pose = addPose(des_gripper_approach_pose.pose, coke_pose);
-    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_approach_pose);
-
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_approach_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     //try to move here:
-    arm_motion_commander.rt_arm_execute_planned_path();
-
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     //slide to can:
-    des_gripper_grasp_pose.header.frame_id = "torso";
-    des_gripper_grasp_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_grasp_);
-    des_gripper_grasp_pose.pose = addPose(des_gripper_grasp_pose.pose, coke_pose);
-    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
-    arm_motion_commander.rt_arm_execute_planned_path();
-
+    des_gripper_grasp_pose.pose = addPosOffset(des_gripper_grasp_pose.pose, give_offset);
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     //close the gripper:
     gripper_publisher.publish(gripper_close);
     //wait for gripper to close:
@@ -197,30 +213,50 @@ void ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obj
     des_gripper_depart_pose.header.frame_id = "torso";
     des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
     des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
-    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
-    arm_motion_commander.rt_arm_execute_planned_path();
-
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     des_gripper_hold_pose.header.frame_id = "torso";
     des_gripper_hold_pose.pose = addPosOffset(des_gripper_grasp_pose.pose, hold_offset);
-    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
-    arm_motion_commander.rt_arm_execute_planned_path();
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    return rtn_val;
 }
 
-void ObjectGrabber::grab_coke(geometry_msgs::PoseStamped object_pose) {
+int ObjectGrabber::grab_coke(geometry_msgs::PoseStamped object_pose) {
     geometry_msgs::PoseStamped des_gripper_grasp_pose, des_gripper_approach_pose, des_gripper_depart_pose, des_gripper_hold_pose;
     //make sure the object pose is in the torso frame; transform if necessary;
     //skip this for now
     int rtn_val;
     //send a command to plan a joint-space move to pre-defined pose:
     rtn_val = arm_motion_commander.plan_move_to_pre_pose();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     //send command to execute planned motion
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     //inquire re/ right-arm joint angles:
     rtn_val=arm_motion_commander.rt_arm_request_q_data();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     gripper_publisher.publish(gripper_open);
 
     //start w/ a jnt-space move from current pose to approach pose:
-    int planner_rtn_code;
     des_gripper_approach_pose.header.frame_id = "torso";
     des_gripper_grasp_pose.header.frame_id = "torso";
     des_gripper_depart_pose.header.frame_id = "torso";
@@ -233,48 +269,279 @@ void ObjectGrabber::grab_coke(geometry_msgs::PoseStamped object_pose) {
     des_gripper_depart_pose.pose = addPosOffset(object_pose.pose, pick_offset);
     des_gripper_hold_pose.pose = addPosOffset(object_pose.pose, hold_offset);
 
-    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
-    arm_motion_commander.rt_arm_execute_planned_path();
-
-    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_approach_pose);
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val = arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_approach_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     //try to move here:
-    arm_motion_commander.rt_arm_execute_planned_path();
-
+    rtn_val = arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     //slide to can:
-    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
-    arm_motion_commander.rt_arm_execute_planned_path();
-
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val = arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
     //close the gripper:
     gripper_publisher.publish(gripper_close);
     //wait for gripper to close:
     ros::Duration(2.0).sleep();
 
     //depart vertically:
-    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
-    arm_motion_commander.rt_arm_execute_planned_path();
-
-    planner_rtn_code = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
-    arm_motion_commander.rt_arm_execute_planned_path();
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val = arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val = arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    return rtn_val;
 }
+int ObjectGrabber::drop_coke(geometry_msgs::PoseStamped object_pose) {
+    geometry_msgs::PoseStamped des_gripper_grasp_pose, des_gripper_approach_pose, des_gripper_depart_pose, des_gripper_hold_pose;
+    //make sure the object pose is in the torso frame; transform if necessary;
+    //skip this for now
+    int rtn_val;
 
+    Eigen::Affine3d object_affine;
+    object_affine = arm_motion_commander.transformPoseToEigenAffine3d(object_pose.pose);
+    Eigen::Vector3d object_origin;
+    object_origin = object_affine.translation();
+    grasp_origin_ = object_origin; //grasp origin is same as object origin...
+    grasp_origin_(2) = gripper_table_z_;//except elevate the gripper for table clearance
+    a_gripper_grasp_.translation() = grasp_origin_;
+
+    //to slide sideways to approach, compute a pre-grasp approach pose;
+    // corresponds to backing up along gripper-z axis by distance L_approach:
+    approach_origin_ = grasp_origin_ - gripper_b_des_*L_approach_;
+    a_gripper_approach_.translation() = approach_origin_;
+
+    // after have cylinder grasped, move purely upwards by z_depart:
+    depart_origin_ = grasp_origin_ + gripper_n_des_*z_depart_;
+    a_gripper_depart_.translation() = depart_origin_;
+
+    //start w/ a jnt-space move from current pose to approach pose:
+    des_gripper_depart_pose.header.frame_id = "torso";
+    des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
+    des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    //try to move here:
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    //slide to can:
+    des_gripper_grasp_pose.header.frame_id = "torso";
+    des_gripper_grasp_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_grasp_);
+    des_gripper_grasp_pose.pose = addPose(des_gripper_grasp_pose.pose, coke_pose);
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    //close the gripper:
+    gripper_publisher.publish(gripper_open);
+    //wait for gripper to close:
+    ros::Duration(2.0).sleep();
+
+    //depart vertically:
+    des_gripper_depart_pose.header.frame_id = "torso";
+    des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
+    des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val = arm_motion_commander.plan_move_to_pre_pose();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    //send command to execute planned motion
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    //inquire re/ right-arm joint angles:
+    rtn_val=arm_motion_commander.rt_arm_request_q_data();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    return rtn_val;
+}
+int ObjectGrabber::give_human(geometry_msgs::PoseStamped object_pose) {
+    geometry_msgs::PoseStamped des_gripper_grasp_pose, des_gripper_approach_pose, des_gripper_depart_pose, des_gripper_hold_pose;
+    //make sure the object pose is in the torso frame; transform if necessary;
+    //skip this for now
+    int rtn_val;
+
+    Eigen::Affine3d object_affine;
+    object_affine = arm_motion_commander.transformPoseToEigenAffine3d(object_pose.pose);
+    Eigen::Vector3d object_origin;
+    object_origin = object_affine.translation();
+    grasp_origin_ = object_origin; //grasp origin is same as object origin...
+    grasp_origin_(2) = gripper_table_z_;//except elevate the gripper for table clearance
+    a_gripper_grasp_.translation() = grasp_origin_;
+
+    //to slide sideways to approach, compute a pre-grasp approach pose;
+    // corresponds to backing up along gripper-z axis by distance L_approach:
+    approach_origin_ = grasp_origin_ - gripper_b_des_*L_approach_;
+    a_gripper_approach_.translation() = approach_origin_;
+
+    // after have cylinder grasped, move purely upwards by z_depart:
+    depart_origin_ = grasp_origin_ + gripper_n_des_*z_depart_;
+    a_gripper_depart_.translation() = depart_origin_;
+
+    //start w/ a jnt-space move from current pose to approach pose:
+    des_gripper_depart_pose.header.frame_id = "torso";
+    des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
+    des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    //try to move here:
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+
+    //depart vertically:
+    des_gripper_depart_pose.header.frame_id = "torso";
+    des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
+    des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
+    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    //close the gripper:
+    gripper_publisher.publish(gripper_open);
+    //wait for gripper to close:
+    ros::Duration(2.0).sleep();
+
+    rtn_val = arm_motion_commander.plan_move_to_pre_pose();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    //send command to execute planned motion
+    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    //inquire re/ right-arm joint angles:
+    rtn_val=arm_motion_commander.rt_arm_request_q_data();
+    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+        return rtn_val;
+    }
+    return rtn_val;
+}
 //callback: at present, hard-coded for Coke-can object;
 //extend this to add more grasp strategies for more objects
 // also, this code does NO error checking (e.g., unreachable); needs to be fixed!
 void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<coke_grabber::coke_grabberAction>::GoalConstPtr& goal) {
-
+    int ret;
     int object_code = goal->object_code;
     geometry_msgs::PoseStamped object_pose = goal->object_frame;
     switch(object_code) {
         case coke_grabber::coke_grabberGoal::MOVE_BACK:
-            arm_motion_commander.plan_move_to_pre_pose();
-            grab_result_.return_code == coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
-            coke_grabber_as_.setSucceeded(grab_result_);
+            ret = arm_motion_commander.plan_move_to_pre_pose();
+            if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
+                coke_grabber_as_.setSucceeded(grab_result_);
+            } else if (ret == cartesian_planner::baxter_cart_moveResult::RT_ARM_PATH_NOT_VALID) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_CANNOT_REACH;
+                coke_grabber_as_.setAborted(grab_result_);
+            } else if (ret == cartesian_planner::baxter_cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_TIMEOUT;
+                coke_grabber_as_.setAborted(grab_result_);
+            } else {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_UNKNOWN;
+                coke_grabber_as_.setAborted(grab_result_);
+            }
             break;
         case coke_grabber::coke_grabberGoal::COKE_CAN:
-            vertical_cylinder_power_grasp(object_pose);
+            ret = vertical_cylinder_power_grasp(object_pose);
             //grab_coke(object_pose);
-            grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
-            coke_grabber_as_.setSucceeded(grab_result_);
+            if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
+                coke_grabber_as_.setSucceeded(grab_result_);
+            } else if (ret == cartesian_planner::baxter_cart_moveResult::RT_ARM_PATH_NOT_VALID) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_CANNOT_REACH;
+                coke_grabber_as_.setAborted(grab_result_);
+            } else if (ret == cartesian_planner::baxter_cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_TIMEOUT;
+                coke_grabber_as_.setAborted(grab_result_);
+            } else {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_UNKNOWN;
+                coke_grabber_as_.setAborted(grab_result_);
+            }
+            break;
+        case coke_grabber::coke_grabberGoal::DROP_COKE:
+            ret = drop_coke(object_pose);
+            if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
+                coke_grabber_as_.setSucceeded(grab_result_);
+            } else if (ret == cartesian_planner::baxter_cart_moveResult::RT_ARM_PATH_NOT_VALID) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_CANNOT_REACH;
+                coke_grabber_as_.setAborted(grab_result_);
+            } else if (ret == cartesian_planner::baxter_cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_TIMEOUT;
+                coke_grabber_as_.setAborted(grab_result_);
+            } else {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_UNKNOWN;
+                coke_grabber_as_.setAborted(grab_result_);
+            }
+            break;
+        case coke_grabber::coke_grabberGoal::GIVE_TO_HUMAN:
+            ret = give_human(object_pose);
+            if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
+                coke_grabber_as_.setSucceeded(grab_result_);
+            } else if (ret == cartesian_planner::baxter_cart_moveResult::RT_ARM_PATH_NOT_VALID) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_CANNOT_REACH;
+                coke_grabber_as_.setAborted(grab_result_);
+            } else if (ret == cartesian_planner::baxter_cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_TIMEOUT;
+                coke_grabber_as_.setAborted(grab_result_);
+            } else {
+                grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_UNKNOWN;
+                coke_grabber_as_.setAborted(grab_result_);
+            }
             break;
         default:
             ROS_WARN("this object ID is not implemented");
@@ -300,74 +567,4 @@ int main(int argc, char** argv) {
     }
 
     return 0;
-
-/*
-    Eigen::VectorXd right_arm_joint_angles;
-    Eigen::Vector3d dp_displacement;
-    int rtn_val;
-    geometry_msgs::PoseStamped rt_tool_pose;
-    
-    arm_motion_commander.send_test_goal(); // send a test command
-    
-    //send a command to plan a joint-space move to pre-defined pose:
-    rtn_val=arm_motion_commander.plan_move_to_pre_pose();
-    
-    //send command to execute planned motion
-    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    
-    //inquire re/ right-arm joint angles:
-    rtn_val=arm_motion_commander.rt_arm_request_q_data();
-    
-    //inquire re/ right-arm tool pose w/rt torso:    
-    rtn_val=arm_motion_commander.rt_arm_request_tool_pose_wrt_torso();
-    
-    //do a joint-space move; get the start angles:
-    right_arm_joint_angles = arm_motion_commander.get_right_arm_joint_angles();
-    
-    //increment all of the joint angles by a fixed amt:
-    for (int i=0;i<7;i++) right_arm_joint_angles[i]+=0.2;
-    
-    //try planning a joint-space motion to this new joint-space pose:
-    rtn_val=arm_motion_commander.rt_arm_plan_jspace_path_current_to_qgoal(right_arm_joint_angles);
-
-    //send command to execute planned motion
-    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();   
-    
-    //let's see where we ended up...should match goal request
-    rtn_val=arm_motion_commander.rt_arm_request_q_data();
-    
-    //return to pre-defined pose:
-    rtn_val=arm_motion_commander.plan_move_to_pre_pose();
-    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();    
-
-    //get tool pose
-    rtn_val = arm_motion_commander.rt_arm_request_tool_pose_wrt_torso();
-    rt_tool_pose = arm_motion_commander.get_rt_tool_pose_stamped();
-    //alter the tool pose:
-    std::cout<<"enter 1: ";
-    int ans;
-    std::cin>>ans;
-    //rt_tool_pose.pose.position.z -= 0.2; // descend 20cm, along z in torso frame
-    ROS_INFO("translating specified dp");
-    rt_tool_pose.pose.position.y += 0.5; // move 20cm, along y in torso frame
-    rt_tool_pose.pose.position.x += 0.2; // move 20cm, along x in torso frame
-    // send move plan request:
-    rtn_val=arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(rt_tool_pose);
-    //send command to execute planned motion
-    rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    
-    //try vector cartesian displacement at fixed orientation:
-    std::cout<<"enter delta-z: ";
-    double delta_z;
-    std::cin>>delta_z;    
-    ROS_INFO("moving dz = %f",delta_z);
-    dp_displacement<<0,0,delta_z;
-    rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_dp_xyz(dp_displacement);
-    if (rtn_val == cartesian_planner::baxter_cart_moveResult::SUCCESS)  { 
-            //send command to execute planned motion
-           rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    }
- * */
-
 }
-
