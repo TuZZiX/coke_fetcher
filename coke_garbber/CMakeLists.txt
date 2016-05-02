@@ -29,17 +29,20 @@ SET(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++0x")
 # Libraries: uncomment the following and edit arguments to create a new library
 cs_add_library(arm_commander src/ArmMotionCommander.cpp)
 cs_add_library(baxter_gripper src/BaxterGripper.cpp)
+cs_add_library(baxter_arm src/BaxterArmCommander.cpp)
 cs_add_library(simple_coke_finder src/SimpleCokeFinder.cpp)
 
 # Executables: uncomment the following and edit arguments to compile new nodes
 # may add more of these lines for more nodes from the same package
-cs_add_executable(object_grabber src/object_grabber_as.cpp)
-cs_add_executable(example_object_grabber src/example_object_grabber_action_client.cpp)
-cs_add_executable(coke_grabber src/baxter_arm_test.cpp)
+cs_add_executable(object_grabber_server src/object_grabber_as.cpp)
+cs_add_executable(object_grabber_client src/example_object_grabber_action_client.cpp)
+cs_add_executable(ork_grabber_client src/coke_grabber_action_client.cpp)
+cs_add_executable(moveit_grabber src/baxter_arm_test.cpp)
 #the following is required, if desire to link a node in this package with a library created in this same package
 # edit the arguments to reference the named node and named library within this package
-target_link_libraries(coke_grabber baxter_arm baxter_gripper ${catkin_LIBRARIES})
-target_link_libraries(object_grabber arm_commander ${catkin_LIBRARIES})
+target_link_libraries(moveit_grabber baxter_arm baxter_gripper ${catkin_LIBRARIES})
+target_link_libraries(object_grabber_server arm_commander ${catkin_LIBRARIES})
+target_link_libraries(ork_grabber_client simple_coke_finder arm_commander ${catkin_LIBRARIES})
 
 cs_install()
 cs_export()

@@ -29,7 +29,7 @@ void objectCallback(const object_recognition_msgs::RecognizedObjectArray objects
 
     if (firstCB == false && (int)objects_msg.objects.size() == 1) {
         coke_id.assign(objects_msg.objects[0].type.key.c_str());
-        firstCB == true;
+        firstCB = true;
     }
     for (int i = 0; i < objects_msg.objects.size(); ++i) {
         if (coke_id.compare(objects_msg.objects[i].type.key.c_str()) == 0) {

@@ -1,0 +1,9 @@
+<launch>
+	<include file="$(find baxter_launch_files)/launch/yale_gripper_xform.launch"/>
+	<node pkg="baxter_tools" type="enable_robot.py" name="enable_robot" args="-e"/>
+	<node pkg="baxter_interface" type="joint_trajectory_action_server.py" name="joint_trajectory_action_server"/>
+	<node pkg="orig_dynamixel_motor_node" type="object_grabber_client" name="orig_dynamixel_motor_node" output="screen"/> 
+	<include file="$(find baxter_moveit_config)/launch/demo_baxter.launch"/>
+	<node pkg="orig_dynamixel_motor_node" type="object_grabber_client" name="orig_dynamixel_motor_node" output="screen"/> 
+	<node pkg="coke_grabber" type="moveit_grabber" name="moveit_grabber" output="screen"/> 
+</launch>
