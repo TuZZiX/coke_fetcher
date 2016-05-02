@@ -4,7 +4,7 @@
 #include <pub_des_state/pub_des_state.h>
 #include <mobot_general/mobot_general.h>
 
-namespace NavAS = actionlib::SimpleActionServer<beta_navigator::navigatorAction>;
+typedef actionlib::SimpleActionServer<beta_navigator::navigatorAction> NavAs;
 
 double tableX, tableY, tableTh;
 
@@ -187,9 +187,9 @@ void Navigator::executeCB(const NavAs::GoalConstPtr& goal) {
 int main(int argc, char** argv) {
     ros::init(argc, argv, "navigation_action_server"); // name this node 
 	if (argc >= 4) {
-		tableX  = argv[1];
-		tableY  = argv[2];
-		tableTh = argv[3];
+		tableX  = atof(argv[1]);
+		tableY  = atof(argv[2]);
+		tableTh = atof(argv[3]);
 	} else {
 		printf("Not enough arguments.  Need x,y,th, you gave %d.\n", argc);
 		return -1;

@@ -5,7 +5,9 @@
 	  type="beta_navigator"
 	  name="$(anon beta_navigator)"
 	  output="screen"
+	  args="1.3 0 0"
 	  />
+  <!-- args represent TABLE (x, y, th), in that order -->
 
   <!-- Insert your nodes here. -->
   
