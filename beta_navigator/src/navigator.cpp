@@ -61,9 +61,9 @@ Navigator::Navigator() :
     home_pose = g_current_pose;
 	//HARDCODE where is the table?
 	//assuming four tiles (1.3m) straight ahead
-    table_pose.position.x = 1.3;
-    table_pose.position.y = 0;
-    table_pose.orientation = ang2quat(0);
+    table_pose.position.x = tableX;
+    table_pose.position.y = tableY;
+    table_pose.orientation = ang2quat(tableTh);
     // table2_pose.position.x=2;
     // table2_pose.position.y=1;
     // table2_pose.orientation = ang2quat(2/3*M_PI);
