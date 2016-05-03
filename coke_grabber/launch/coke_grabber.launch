@@ -3,7 +3,7 @@
 	<node pkg="baxter_tools" type="enable_robot.py" name="enable_robot" args="-e"/>
 	<include file="$(find baxter_launch_files)/launch/yale_gripper_xform.launch"/>
 	<node name="detection" pkg="object_recognition_core" type="detection" args="-c $(find object_recognition_tabletop)/conf/detection.object.ros.ork" output="screen"/>
-	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find coke_grabber)/launch/object_recognition_kitchen.rviz"/>
+	<!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find coke_grabber)/launch/object_recognition_kitchen.rviz"/> -->
 	<node pkg="baxter_trajectory_streamer" type="rt_arm_as" name="rt_arm_as"  output="screen"/>
 	<node pkg="baxter_trajectory_streamer" type="left_arm_as" name="left_arm_as"  output="screen"/> 
 	<node pkg="cartesian_planner" type="baxter_cart_move_as" name="baxter_cart_move_as" output="screen"/>
@@ -11,5 +11,5 @@
 	<!--<node pkg="rviz" type="rviz" name="rviz" args="-d $(find baxter_launch_files)/rviz_config/baxter.rviz"/> -->
 	<node pkg="baxter_trajectory_streamer" type="pre_pose" name="pre_pose"/>
 	<node pkg="coke_grabber" type="object_grabber_server" name="object_grabber_server"  output="screen"/> 
-	<node pkg="coke_grabber" type="object_grabber_client" name="object_grabber_client"  output="screen"/> 
+	<!-- <node pkg="coke_grabber" type="object_grabber_client" name="object_grabber_client"  output="screen"/>  -->
 </launch>

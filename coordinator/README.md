@@ -7,12 +7,12 @@ To prepare the robot for use of the beta_coke_fetcher package, complete the foll
 + Give permission `a+rw` and `+x` to `/dev/ttyUSB0`
 + On Jinx, for each terminal, do `baxter_master`
 + Enable Baxter: `rosrun baxter_tools enable_robot.py -e`
-+ Start up cwru_base with kinect: `roslaunch coke_garbber base_kinect.launch`
++ Start up cwru_base with kinect: `roslaunch coke_grabber base_kinect.launch`
 + Start up CWRU nodes with: `roslaunch baxter_launch_files baxter_nodes.launch`
 + Open rqt_reconfigure: `rosrun rqt_reconfigure rqt_reconfigure`
 + In `camera/driver`, select `depth_registration`.
 + Register object to database for recognition: `rosrun object_recognition_core object_add.py -n "coke " -d "A empty coke can" --commit`
-+ Bind mesh with object, notice to replace [] with object ID: ``rosrun object_recognition_core mesh_add.py [the object id that previous command returned] `rospack find coke_garbber`/data/coke.stl --commit``
++ Bind mesh with object, notice to replace [] with object ID: ``rosrun object_recognition_core mesh_add.py [the object id that previous command returned] `rospack find coke_grabber`/data/coke.stl --commit``
 
 
 # Coordinator

@@ -7,7 +7,7 @@
 
 /** Set alarm if anything is within 0.5m of the front of robot, or too
     close to the sides. */
-double MIN_SAFE_DISTANCE = 1.0;
+double MIN_SAFE_DISTANCE = 0.1;
 double ROBOT_RADIUS = 0.5;
 
 /** these values to be set within the laser callback */

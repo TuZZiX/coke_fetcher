@@ -10,7 +10,7 @@
 	<param name="/K_PSI" value="2.5"/>
 	<param name="/K_LAT_ERR_THRESH" value="2.0"/>
 
-	<param name="/MIN_SAFE_DISTANCE" value="0.7"/>
+	<param name="/MIN_SAFE_DISTANCE" value="0.1"/>
 	<param name="/DETECT_DISTANCE" value="2.5"/>
 	<param name="/FRONT_ANGLE" value="0.5"/>
 	<param name="/LEFT_ANGLE" value="0.5"/>
@@ -21,10 +21,45 @@
 	<param name="/speed_max" value="0.25"/>
 	<param name="/omega_max" value="0.5"/>
 
-	<node name= "traj_publisher" pkg= "p8_beta" type= "traj_publisher_ps8" args="jinx" output="screen">
+<!-- 	<node name= "traj_publisher" pkg= "p8_beta" type= "traj_publisher_ps8" args="jinx" output="screen">
 		<remap from="/amcl_odom" to="/odom" />
 	</node>
-	<node name= "steering_corrector" pkg= "p8_beta" type= "steering_corrector_ps8" output="screen">
+	
+	pose: 
+  pose: 
+    position: 
+      x: 18.0169228283
+      y: 2.7092371267
+      z: 0.0
+    orientation: 
+      x: 0.0
+      y: 0.0
+      z: 0.742727354621
+      w: 0.669593964054
+to radians: 0.8371343565160785 * 2
+ -->
+   <node
+	  pkg="beta_navigator"
+	  type="beta_navigator"
+	  name="$(anon beta_navigator)"
+	  output="screen"
+	  args="18.0169228283 2.7092371267 1.67427"
+	  />
+	  <!-- args represent TABLE (x, y, th), in that order -->
+
+  	<node
+  		name="$(anon steering_corrector)"
+  		pkg="beta_navigator"
+  		type="lin_controller"
+		output="screen"
+			>
 		<remap from="/amcl_odom" to="/odom" />
 	</node>
+
+<!--  	<node
+ 		name="steering_corrector"
+		pkg= "p8_beta" type= "steering_corrector_ps8" output="screen">
+		<remap from="/amcl_odom" to="/odom" />
+	</node>
+ -->
 </launch>

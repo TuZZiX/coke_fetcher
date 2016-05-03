@@ -43,7 +43,7 @@ int main(int argc, char** argv) {
     ROS_INFO("connected to beta_navigator action server"); // if here, then we connected to the server; 
      
     beta_navigator::navigatorGoal navigation_goal;
-    navigation_goal.location_code = beta_navigator::navigatorGoal::HOME;
+    navigation_goal.location_code = beta_navigator::navigatorGoal::TABLE;
     
     ROS_INFO("sending goal: ");
 	navigator_ac.sendGoal(navigation_goal,&navigatorDoneCb);

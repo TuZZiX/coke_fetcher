@@ -1,14 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <launch>
-		<remap from="/scan" to="/base_laser1_scan" />
+<remap from="/scan" to="/base_laser1_scan" />
 
-	<node name= "wall_detector2" pkg= "p8_beta" type= "wall_detector2_ps8" args="0.7 0.5" output="screen" /> 
+	<node name= "james_lidar" pkg= "beta_navigator" type= "james_lidar" args="0.1 0.5" output="screen" /> 
 
-	<node name= "map_server" pkg= "map_server" type= "map_server" args="$(find p8_beta)/map/gl2_map.yaml" output="screen"/>
+	<node name= "map_server" pkg= "map_server" type= "map_server" args="$(find beta_navigator)/map/gl2_map.yaml" output="screen"/>
 
-	<node name= "amcl_odom_tf" pkg= "p8_beta" type= "amcl_odom_tf_ps8" output="screen"/>
+	<node name= "odom_tf_set" pkg= "beta_navigator" type= "odom_tf_set" output="screen"/>
+	
 	<node pkg="amcl" type="amcl" name="amcl" output="screen"/>
 	
-	<node pkg="rviz" type="rviz" name="rviz" args="-d $(find p8_beta)/launch/ps8.rviz"/>
+	<!-- <node pkg="rviz" type="rviz" name="rviz" args="-d $(find beta_navigator)/launch/ps8.rviz"/> -->
 
 </launch>
