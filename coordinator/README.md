@@ -4,7 +4,7 @@ This is a set of nodes that includes: *coordinator*, *simple_coke_finder*, *navi
 
 ## Setup
 To prepare the robot for use of the beta_coke_fetcher package, complete the following:
-+ Give permission `a+rw` and `+x` to `/dev/ttyUSB`
++ Give permission `a+rw` and `+x` to `/dev/ttyUSB0`
 + On Jinx, for each terminal, do `baxter_master`
 + Enable Baxter: `rosrun baxter_tools enable_robot.py -e`
 + Start up cwru_base with kinect: `roslaunch coke_garbber base_kinect.launch`
@@ -23,7 +23,7 @@ recognition of object, grasp of object, and return to home.
 
 ## Example usage
 
-Start up the coke fetcher nodes wtih:
+Start up the coke fetcher nodes with:
 `roslaunch coordinator main.launch`
 
 Then trigger the behavior with:

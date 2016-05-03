@@ -19,7 +19,7 @@
 	  /> -->
 
 	<!-- <include file="$(find coke_garbber)/launch/moveit_grabber.launch"/> -->
-	<include file="$(find coke_garbber)/launch/coke_grabber.launch"/>
-	<include file="$(find coke_garbber)/launch/base_kinect.launch"/>
+	<include file="$(find coke_grabber)/launch/coke_grabber.launch"/>
+	<include file="$(find coke_grabber)/launch/base_kinect.launch"/>
 
 </launch>

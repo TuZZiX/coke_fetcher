@@ -46,7 +46,7 @@ Navigator::Navigator() :
 {
     ROS_INFO("in constructor of beta_navigator...");
     // do any other desired initializations here...specific to your implementation
-    robot.turn(2*M_PI);
+    //robot.turn(2*M_PI);
     g_current_pose = desStatePublisher.get_odom().pose.pose;
     ROS_INFO("got odometery with x = %f, y = %f, th = %f",
 			 g_current_pose.position.x,
