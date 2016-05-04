@@ -3,6 +3,7 @@
 #include <beta_navigator/navigatorAction.h>
 #include <pub_des_state/pub_des_state.h>
 #include <mobot_general/mobot_general.h>
+#include <unistd.h>
 
 typedef actionlib::SimpleActionServer<beta_navigator::navigatorAction> NavAs;
 
@@ -47,23 +48,36 @@ Navigator::Navigator() :
     ROS_INFO("in constructor of beta_navigator...");
     // do any other desired initializations here...specific to your implementation
     //robot.turn(2*M_PI);
-    g_current_pose = desStatePublisher.get_odom().pose.pose;
+    //g_current_pose = desStatePublisher.get_odom().pose.pose;
+    g_current_pose.position.x =0;
+    g_current_pose.position.y =0;
+    g_current_pose.position.z = 0;
+    g_current_pose.orientation.x = 0.0;
+    g_current_pose.orientation.y = 0.0;
+    g_current_pose.orientation.z = -0.0437362431193;
+    g_current_pose.orientation.w = -0.999043112702;
+
+/*
     ROS_INFO("got odometery with x = %f, y = %f, th = %f",
 			 g_current_pose.position.x,
 			 g_current_pose.position.y,
 			 quat2ang(g_current_pose.orientation));
     //desStatePublisher.set_init_pose(g_current_pose.position.x, g_current_pose.position.y, quat2ang(g_current_pose.orientation));
-    desStatePublisher.sync_pose();
-    desStatePublisher.disable_replanning();
+    desStatePublisher.sync_pose();*/
+    desStatePublisher.set_init_pose(g_current_pose.position.x, g_current_pose.position.y, quat2ang(g_current_pose.orientation));
+    //desStatePublisher.disable_replanning();
     navigator_as_.start(); //start the server running
 
 	//hardcoding poses
     home_pose = g_current_pose;
 	//HARDCODE where is the table?
-	//assuming four tiles (1.3m) straight ahead
-    table_pose.position.x = tableX;
-    table_pose.position.y = tableY;
-    table_pose.orientation = ang2quat(tableTh);
+	//assuming four tiles (1.1m) straight ahead
+    table_pose.position.x = 1.1;
+    table_pose.position.y = 0;
+    table_pose.position.z = 0;
+
+    //table_pose.orientation = ang2quat(tableTh);
+    table_pose.orientation = g_current_pose.orientation;
     // table2_pose.position.x=2;
     // table2_pose.position.y=1;
     // table2_pose.orientation = ang2quat(2/3*M_PI);
@@ -73,55 +87,89 @@ Navigator::Navigator() :
  * the hard work of navigating to HOME.
  */
 int Navigator::navigate_home() {
+    /*
+    ros::Rate looprate(1 / dt);
     geometry_msgs::PoseStamped home_pose_stamped;
     home_pose_stamped.pose = home_pose;
     home_pose_stamped.header.frame_id = "odom_frame";
     home_pose_stamped.header.stamp = ros::Time::now();
     desStatePublisher.append_path_queue(home_pose_stamped);
+    for (int i = 0; i < 10; ++i)
+    {
+        desStatePublisher.pub_next_state();
+        ros::spinOnce();
+        //looprate.sleep();
+        usleep((1/dt)*1000);
+    }
     while (desStatePublisher.get_motion_mode() != DONE_W_SUBGOAL) {
         if (desStatePublisher.get_motion_mode() == E_STOPPED) {
             desStatePublisher.flush_path();
             return  beta_navigator::navigatorResult::FAILED_BLOCKED;
         }
         desStatePublisher.pub_next_state();
-        g_current_pose = desStatePublisher.get_odom().pose.pose;
+        //g_current_pose = desStatePublisher.get_odom().pose.pose;
         ros::spinOnce();
-        desStatePublisher.loop_sleep();
+        //desStatePublisher.loop_sleep();
+        //looprate.sleep();
+        usleep((1/dt)*1000);
+
     }
-	//only here if desStatePublisher.get_motion_mode() == DONE_W_SUBGOAL
+	//only here if desStatePublisher.get_motion_mode() == DONE_W_SUBGOAL*/
+    robot.move(-1.0);
+    robot.turn(-M_PI);
+    robot.move(4.5);
     return beta_navigator::navigatorResult::DESIRED_POSE_ACHIEVED; //just say we were successful
 }
 
 /**Drive to table where can is.*/
 int Navigator::navigate_to_table() {
+    ros::Rate looprate(1 / dt);
     desStatePublisher.append_path_queue(
 										table_pose.position.x,
 										table_pose.position.y,
 										quat2ang(table_pose.orientation));
+    for (int i = 0; i < 10; ++i)
+    {
+        desStatePublisher.pub_next_state();
+        ros::spinOnce();
+        //desStatePublisher.loop_sleep();
+        //looprate.sleep();
+        usleep((1/dt)*1000);
+    }
     while (desStatePublisher.get_motion_mode() != DONE_W_SUBGOAL) {
         if (desStatePublisher.get_motion_mode() == E_STOPPED) {
             desStatePublisher.flush_path();
             return  beta_navigator::navigatorResult::FAILED_BLOCKED;
         }
         desStatePublisher.pub_next_state();
-        g_current_pose = desStatePublisher.get_odom().pose.pose;
+        //g_current_pose = desStatePublisher.get_odom().pose.pose;
         ros::spinOnce();
-        desStatePublisher.loop_sleep();
+        //looprate.sleep();
+        usleep((1/dt)*1000);
     }
     return beta_navigator::navigatorResult::DESIRED_POSE_ACHIEVED; //just say we were successful
 }
 
 int Navigator::navigate_to_pose(geometry_msgs::PoseStamped goal_pose) {
+    ros::Rate looprate(1 / dt);
     desStatePublisher.append_path_queue(goal_pose);
+    for (int i = 0; i < 10; ++i)
+    {
+        desStatePublisher.pub_next_state();
+        ros::spinOnce();
+        //looprate.sleep();
+        usleep((1/dt)*1000);
+    }
     while (desStatePublisher.get_motion_mode() != DONE_W_SUBGOAL){
         if (desStatePublisher.get_motion_mode() == E_STOPPED) {
             desStatePublisher.flush_path();
             return  beta_navigator::navigatorResult::FAILED_BLOCKED;
         }
         desStatePublisher.pub_next_state();
-        g_current_pose = desStatePublisher.get_odom().pose.pose;
+        //g_current_pose = desStatePublisher.get_odom().pose.pose;
         ros::spinOnce();
-        desStatePublisher.loop_sleep();
+        //looprate.sleep();
+        usleep((1/dt)*1000);
     }
     return beta_navigator::navigatorResult::DESIRED_POSE_ACHIEVED;
 }
@@ -192,7 +240,7 @@ int main(int argc, char** argv) {
 		tableTh = atof(argv[3]);
 	} else {
 		printf("Not enough arguments.  Need x,y,th, you gave %d.\n", argc);
-		return -1;
+		//return -1;
 	}
 
     ROS_INFO("instantiating the navigation action server: ");

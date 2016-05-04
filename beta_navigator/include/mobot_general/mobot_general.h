@@ -7,6 +7,7 @@
 
 #include <ros/ros.h>
 #include <geometry_msgs/Twist.h>
+#include <nav_msgs/Odometry.h>
 #include <geometry_msgs/Quaternion.h>
 #include <std_msgs/Bool.h>
 #include <std_msgs/Float64.h>
@@ -35,6 +36,7 @@ private:
     double speed; // 1m/s speed command
     double yaw_rate; //0.5 rad/sec yaw rate command
     geometry_msgs::Twist twist_cmd; //this is the message type required to send twist commands to STDR
+    nav_msgs::Odometry des_state;
 public:
     RobotCommander(ros::NodeHandle& nodehandle);
     void stop();

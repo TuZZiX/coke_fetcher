@@ -2,7 +2,7 @@
 <launch>
 <remap from="/scan" to="/base_laser1_scan" />
 
-	<node name= "james_lidar" pkg= "beta_navigator" type= "james_lidar" args="0.1 0.5" output="screen" /> 
+	<!--<node name= "james_lidar" pkg= "beta_navigator" type= "james_lidar" args="0.1 0.5" output="screen" />--> 
 
 	<node name= "map_server" pkg= "map_server" type= "map_server" args="$(find beta_navigator)/map/gl2_map.yaml" output="screen"/>
 

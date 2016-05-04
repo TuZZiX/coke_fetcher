@@ -4,15 +4,21 @@ This is a set of nodes that includes: *coordinator*, *simple_coke_finder*, *navi
 
 ## Setup
 To prepare the robot for use of the beta_coke_fetcher package, complete the following:
-+ Give permission `a+rw` and `+x` to `/dev/ttyUSB0`
-+ On Jinx, for each terminal, do `baxter_master`
-+ Enable Baxter: `rosrun baxter_tools enable_robot.py -e`
-+ Start up cwru_base with kinect: `roslaunch coke_grabber base_kinect.launch`
-+ Start up CWRU nodes with: `roslaunch baxter_launch_files baxter_nodes.launch`
-+ Open rqt_reconfigure: `rosrun rqt_reconfigure rqt_reconfigure`
-+ In `camera/driver`, select `depth_registration`.
+
+IMPORTANT: On Jinx, for each terminal, do `baxter_master`.
+
+### On booting Jinx
++ Give permission `a+rw` and `+x` to `/dev/ttyUSB0` and to `/dev/ttyUSB1`
 + Register object to database for recognition: `rosrun object_recognition_core object_add.py -n "coke " -d "A empty coke can" --commit`
 + Bind mesh with object, notice to replace [] with object ID: ``rosrun object_recognition_core mesh_add.py [the object id that previous command returned] `rospack find coke_grabber`/data/coke.stl --commit``
+
+### On booting Merry
++ Wait for her head halo to turn green.
++ Enable Baxter: `rosrun baxter_tools enable_robot.py -e # subsumed by launch file`
++ Start up cwru_base with kinect: `roslaunch coke_grabber base_kinect.launch`
++ Start up CWRU nodes with: `roslaunch baxter_launch_files baxter_nodes.launch # subsumed by launch file`
++ Open rqt_reconfigure: `rosrun rqt_reconfigure rqt_reconfigure`
+    + In `camera/driver`, select `depth_registration`.
 
 
 # Coordinator
@@ -23,9 +29,15 @@ recognition of object, grasp of object, and return to home.
 
 ## Example usage
 
-Start up the coke fetcher nodes with:
-`roslaunch coordinator main.launch`
+Run these in separate terminals.  Wait until main has finished loading before runnning `coke_fetcher`.
 
+
+```
+roslaunch coke_fetcher main.launch # does not move the robot's wheels
+roslaunch coke_fetcher coke_fetcher # Go!
+```
+
+### Obsolete old ignore
 Then trigger the behavior with:
 `rostopic pub Alexa_codes std_msgs/UInt32 100`
 

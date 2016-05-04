@@ -34,12 +34,15 @@ int main(int argc, char** argv) {
     // attempt to connect to the server:
     ROS_INFO("waiting for server: ");
     bool server_exists = false;
-    while ((!server_exists) && (ros::ok())) {
-        server_exists = navigator_ac.waitForServer(ros::Duration(0.5)); // 
+    server_exists = navigator_ac.waitForServer(); 
+    /*
+    while (!server_exists) {
+        server_exists = navigator_ac.waitForServer(); // 
+        //server_exists = navigator_ac.isServerConnected();
+        //ros::Duration(0.5).sleep();
         ros::spinOnce();
-        ros::Duration(0.5).sleep();
         ROS_INFO("retrying...");
-    }
+    }*/
     ROS_INFO("connected to beta_navigator action server"); // if here, then we connected to the server; 
      
     beta_navigator::navigatorGoal navigation_goal;

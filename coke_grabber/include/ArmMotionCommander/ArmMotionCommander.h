@@ -54,7 +54,7 @@ public:
     //utilities to convert between affine and pose
     Eigen::Affine3d transformPoseToEigenAffine3d(geometry_msgs::Pose pose);
     geometry_msgs::Pose transformEigenAffine3dToPose(Eigen::Affine3d e);
-
+    double planning_time;
 };
 
 #endif //COKE_GRABBER_ARMMOTIONCOMMANDER_H

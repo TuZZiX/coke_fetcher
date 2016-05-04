@@ -37,20 +37,53 @@
       z: 0.742727354621
       w: 0.669593964054
 to radians: 0.8371343565160785 * 2
+
+pose: 
+  pose: 
+    position: 
+      x: -0.619675576687
+      y: -0.113665878773
+      z: 0.0
+    orientation: 
+      x: -0.0
+      y: -0.0
+      z: -0.0437362431193
+      w: -0.999043112702
+      
+      
+      pose: 
+  pose: 
+    position: 
+      x: 1.31646418571
+      y: 0.0159240551293
+      z: 0.0
+    orientation: 
+      x: -0.0
+      y: -0.0
+      z: -0.0243476726688
+      w: -0.999703551477
+
+
  -->
+ <!--
    <node
 	  pkg="beta_navigator"
 	  type="beta_navigator"
 	  name="$(anon beta_navigator)"
 	  output="screen"
 	  args="18.0169228283 2.7092371267 1.67427"
-	  />
+	  />-->
 	  <!-- args represent TABLE (x, y, th), in that order -->
-
+	<node
+	  pkg="beta_navigator"
+	  type="beta_navigator"
+	  name="$(anon beta_navigator)"
+	  output="screen"
+	  />
   	<node
   		name="$(anon steering_corrector)"
   		pkg="beta_navigator"
-  		type="lin_controller"
+  		type="nob_controllor"
 		output="screen"
 			>
 		<remap from="/amcl_odom" to="/odom" />

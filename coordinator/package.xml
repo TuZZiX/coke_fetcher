@@ -48,6 +48,15 @@
 <build_depend>tf</build_depend>
 <build_depend>geometry_msgs</build_depend>
 <build_depend>std_msgs</build_depend>
+ <build_depend>tf</build_depend>
+ <build_depend>moveit_msgs</build_depend>
+<build_depend>moveit_ros_perception</build_depend>
+<build_depend>moveit_ros_planning_interface</build_depend>
+<build_depend>moveit_fake_controller_manager</build_depend>
+<build_depend>moveit_core</build_depend>
+<build_depend>image_transport</build_depend>
+<build_depend>cv</build_depend>
+<build_depend>cv_bridge</build_depend>
   <run_depend>roscpp</run_depend>
 <run_depend>object_finder</run_depend>
 <run_depend>object_grabber</run_depend>
@@ -56,6 +65,17 @@
 <run_depend>tf</run_depend>
 <run_depend>geometry_msgs</run_depend>
 <run_depend>std_msgs</run_depend>
+<run_depend>tf</run_depend>
+<run_depend>moveit_msgs</run_depend>
+<run_depend>moveit_ros_perception</run_depend>
+<run_depend>moveit_ros_planning_interface</run_depend>
+<run_depend>moveit_fake_controller_manager</run_depend>
+<run_depend>moveit_core</run_depend>
+<run_depend>moveit_ros_move_group</run_depend>
+<run_depend>moveit_simple_controllor_manager</run_depend>
+<run_depend>image_transport</run_depend>
+<run_depend>cv</run_depend>
+<run_depend>cv_bridge</run_depend>
   <!-- The export tag contains other, unspecified, tags -->
   <export>
     <!-- You can specify that this package is a metapackage here: -->

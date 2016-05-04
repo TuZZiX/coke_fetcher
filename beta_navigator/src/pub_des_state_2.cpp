@@ -1,23 +1,55 @@
 #include <pub_des_state/pub_des_state.h>
 //ExampleRosClass::ExampleRosClass(ros::NodeHandle* nodehandle):nh_(*nodehandle)
 
-DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
+DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh), looprate(default_dt) {
     //as_(nh, "pub_des_state_server", boost::bind(&DesStatePublisher::executeCB, this, _1),false) {
     //as_.start(); //start the server running
-    //configure the trajectory builder: 
-    //dt_ = dt; //send desired-state messages at fixed rate, e.g. 0.02 sec = 50Hz
-    trajBuilder_.set_dt(dt);
+    //configure the trajectory builder:
+    dt_ = default_dt; //0.02; //send desired-state messages at fixed rate, e.g. 0.02 sec = 50Hz
     //dynamic parameters: should be tuned for target system
-    accel_max_ = accel_max;
+    accel_max_ = default_accel_max; //0.5; //1m/sec^2
+    alpha_max_ = default_alpha_max; //0.2; //1 rad/sec^2
+    speed_max_ = default_speed_max; //1.0; //1 m/sec
+    omega_max_ = default_omega_max; //1.0; //1 rad/sec
+    path_move_tol_ = default_path_move_tol; //0.01; // if path points are within 1cm, fuggidaboutit
+    max_pos_draft = default_max_pos_draft;
+    max_odom_draft = default_max_odom_draft;
+    enable_replanning_ = false;
+/*
+    if (!nh_.hasParam("accel_max")){
+        ROS_INFO("No accel_max specified, using default value %f", accel_max_);
+    } else {
+        nh_.getParam("accel_max", accel_max_);
+        ROS_INFO("accel_max set to %f", accel_max_);
+    }
+    if (!nh_.hasParam("alpha_max")){
+        ROS_INFO("No alpha_max specified, using default value %f", alpha_max_);
+    } else {
+        nh_.getParam("alpha_max", alpha_max_);
+        ROS_INFO("alpha_max set to  %f", alpha_max_);
+    }
+    if (!nh_.hasParam("speed_max")){
+        ROS_INFO("No speed_max specified, using default value %f", speed_max_);
+    } else {
+        nh_.getParam("speed_max", speed_max_);
+        ROS_INFO("speed_max set to %f", speed_max_);
+    }
+    if (!nh_.hasParam("omega_max")){
+        ROS_INFO("No omega_max specified, using default value %f", omega_max_);
+    } else {
+        nh_.getParam("omega_max", omega_max_);
+        ROS_INFO("omega_max set to %f", omega_max_);
+    }
+    */
+    //dt_ = dt; //send desired-state messages at fixed rate, e.g. 0.02 sec = 50Hz
+    trajBuilder_.set_dt(dt_);
+    //dynamic parameters: should be tuned for target system
     trajBuilder_.set_accel_max(accel_max_);
-    alpha_max_ = alpha_max;
     trajBuilder_.set_alpha_max(alpha_max_);
-    speed_max_ = speed_max;
     trajBuilder_.set_speed_max(speed_max_);
-    omega_max_ = omega_max;
     trajBuilder_.set_omega_max(omega_max_);
-    path_move_tol_ = path_move_tol;
     trajBuilder_.set_path_move_tol_(path_move_tol_);
+
     initializePublishers();
     initializeServices();
     //define a halt state; zero speed and spin, and fill with viable coords
@@ -40,8 +72,9 @@ DesStatePublisher::DesStatePublisher(ros::NodeHandle& nh) : nh_(nh) {
     seg_start_state_ = current_des_state_;
     seg_end_state_ = current_des_state_;
     lidar_alarm_ = false;
-    opt_dir_ = 0;
+    last_cb_time_ = ros::Time::now();
     is_alarmed_ = false;
+    odomCB_ = false;
 
     current_twist_.linear.x = 0.0;
     current_twist_.linear.y = 0.0;
@@ -62,11 +95,10 @@ void DesStatePublisher::initializeServices() {
     append_path_ = nh_.advertiseService("append_path_queue_service",
             &DesStatePublisher::appendPathQueueCB, this);
     alarm_subscriber_ = nh_.subscribe("lidar_alarm", 1, &DesStatePublisher::alarmCB, this);
-    //direction_subscriber_ = nh_.subscribe("opt_direction", 1, &DesStatePublisher::directionCB, this);
+    odom_subscriber_ = nh_.subscribe("odom", 1, &DesStatePublisher::odomCallback, this);
 }
 
 //member helper function to set up publishers;
-
 void DesStatePublisher::initializePublishers() {
     ROS_INFO("Initializing Publishers");
     desired_state_publisher_ = nh_.advertise<nav_msgs::Odometry>("/desState", 1, true);
@@ -91,7 +123,7 @@ bool DesStatePublisher::flushPathQueueCB(std_srvs::TriggerRequest& request, std_
     }
 }
 
-bool DesStatePublisher::appendPathQueueCB(p8_beta::pathRequest& request, p8_beta::pathResponse& response) {
+bool DesStatePublisher::appendPathQueueCB(beta_navigator::pathRequest& request, beta_navigator::pathResponse& response) {
 
     int npts = request.path.poses.size();
     ROS_INFO("appending path queue with %d points", npts);
@@ -114,10 +146,33 @@ void DesStatePublisher::alarmCB(const std_msgs::Bool& alarm_msg)
         }
     }
 }
-/*
-void DesStatePublisher::directionCB(const std_msgs::Float64& direction_msg) {
-    opt_dir_ = direction_msg.data;
-}*/
+void DesStatePublisher::odomCallback(const nav_msgs::Odometry& odom_msg) {
+    time_interval_ = (odom_msg.header.stamp - last_cb_time_).toSec();
+    distance_interval_ = sqrt(pow(odom_msg.pose.pose.position.x - current_odom_.pose.pose.position.x, 2) + pow(odom_msg.pose.pose.position.y - current_odom_.pose.pose.position.y, 2));
+    current_odom_ = odom_msg;
+    last_cb_time_ = current_odom_.header.stamp;
+    if ((((distance_interval_ / time_interval_) >= max_odom_draft) && odomCB_) && enable_replanning_) {
+        ROS_INFO("Odom drafted, replanning path");
+        if (motion_mode_ == HALTING) {
+            e_stop_trigger_ = true;
+        } else if (motion_mode_ == PURSUING_SUBGOAL) {
+            motion_mode_ = RECOVERING;
+        }
+        sync_pose();
+    }
+    pose_draft_ = sqrt(pow(current_pose_.pose.position.x - current_odom_.pose.pose.position.x, 2) + pow(current_pose_.pose.position.y - current_odom_.pose.pose.position.y, 2));
+    if (((pose_draft_ >= max_pos_draft) && odomCB_) && enable_replanning_) {
+        ROS_INFO("Robot have drafted more than %f, replanning path", max_pos_draft);
+        if (motion_mode_ == HALTING) {
+            e_stop_trigger_ = true;
+        } else if (motion_mode_ == PURSUING_SUBGOAL) {
+            motion_mode_ = RECOVERING;
+        }
+        sync_pose();
+    }
+    odomCB_ = true;
+}
+
 void DesStatePublisher::set_init_pose(double x, double y, double psi) {
     current_pose_ = trajBuilder_.xyPsi2PoseStamped(x, y, psi);
 }
@@ -144,7 +199,6 @@ void DesStatePublisher::set_init_pose(double x, double y, double psi) {
 // or points can be appended to path queue w/ service append_path_
 
 void DesStatePublisher::pub_next_state() {
-    ROS_INFO("motion mode is %d", motion_mode_);
     // first test if an e-stop has been triggered
     if (e_stop_trigger_) {
         e_stop_trigger_ = false; //reset trigger
@@ -268,4 +322,15 @@ void DesStatePublisher::pub_next_state() {
             desired_state_publisher_.publish(current_des_state_);
             break;
     }
+    ros::spinOnce();
+}
+
+nav_msgs::Odometry DesStatePublisher::get_odom() {
+    odomCB_ = false;
+    ros::Rate sleep_time(100);
+    while (!odomCB_) {
+        ros::spinOnce();    //wait for odom callback
+        sleep_time.sleep();
+    }
+    return current_odom_;
 }

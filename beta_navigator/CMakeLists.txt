@@ -38,7 +38,7 @@ cs_add_library(odom_tf_lib src/odom_tf_fncs.cpp)
 cs_add_executable(beta_navigator          src/navigator.cpp)
 cs_add_executable(navigator_action_client src/navigator_action_client.cpp)
 
-# cs_add_executable(nob_controllor     src/open_loop_controller.cpp)
+cs_add_executable(nob_controllor     src/open_loop_controller.cpp)
 cs_add_executable(lin_controller     src/lin_steering_wrt_odom.cpp)
 # cs_add_executable(non_lin_controllor src/mobot_nl_steering.cpp)
 cs_add_executable(adding_path        src/append_path_client.cpp)

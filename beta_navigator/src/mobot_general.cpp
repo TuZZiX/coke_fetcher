@@ -80,10 +80,10 @@ std::vector<double> quat2euler(geometry_msgs::Quaternion quaternion) {
 }
 
 RobotCommander::RobotCommander(ros::NodeHandle &nodehandle) : nh_(nodehandle) {
-    sample_dt = 0.001;
-    speed = 1.0; // 1m/s speed command
+    sample_dt = 0.01;
+    speed = 0.5; // 1m/s speed command
     yaw_rate = 0.5; //0.5 rad/sec yaw rate command
-    ros::Publisher twist_commander_ = nh_.advertise<geometry_msgs::Twist>("cmd_vel", 1);
+    ros::Publisher twist_commander_ = nh_.advertise<nav_msgs::Odometry>("/desState", 1);
     twist_commander = twist_commander_;
 }
 void RobotCommander::stop() {
@@ -95,7 +95,8 @@ void RobotCommander::stop() {
     twist_cmd.angular.y = 0.0;
     twist_cmd.angular.z = 0.0;
     for (int i = 0; i < 10; i++) {
-        twist_commander.publish(twist_cmd);
+        des_state.twist.twist = twist_cmd;
+        twist_commander.publish(des_state);
         loop_timer.sleep();
         ros::spinOnce();
     }
@@ -124,7 +125,8 @@ void RobotCommander::turn(double rad) {
         ROS_INFO("Turn right");
     }
     while (timer < time) {
-        twist_commander.publish(twist_cmd);
+        des_state.twist.twist = twist_cmd;
+        twist_commander.publish(des_state);
         timer += sample_dt;
         loop_timer.sleep();
         ros::spinOnce();
@@ -153,7 +155,8 @@ void RobotCommander::spin(int direction) {
             break;
     }
     for (int i = 0; i < 10; i++) {
-        twist_commander.publish(twist_cmd);
+        des_state.twist.twist = twist_cmd;
+        twist_commander.publish(des_state);
         loop_timer.sleep();
         ros::spinOnce();
     }
@@ -184,7 +187,8 @@ void RobotCommander::move(int direction, double time) {
             break;
     }
     while (timer < time) {
-        twist_commander.publish(twist_cmd);
+        des_state.twist.twist = twist_cmd;
+        twist_commander.publish(des_state);
         timer += sample_dt;
         loop_timer.sleep();
         ros::spinOnce();
@@ -222,7 +226,8 @@ void RobotCommander::go(int direction) {
             break;
     }
     for (int i = 0; i < 10; i++) {
-        twist_commander.publish(twist_cmd);
+        des_state.twist.twist = twist_cmd;
+        twist_commander.publish(des_state);
         loop_timer.sleep();
         ros::spinOnce();
     }
