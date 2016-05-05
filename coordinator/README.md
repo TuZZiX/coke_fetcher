@@ -1,6 +1,8 @@
 # beta_coke_fetcher
 -------------------------
 
+Video: <https://www.youtube.com/watch?v=Mta6FejV81Y>
+
 This is a set of nodes that includes: *coordinator*, *simple_coke_finder*,
 *navigator*, and *coke_grabber*. For each node, a description and example usage
 is written below.
