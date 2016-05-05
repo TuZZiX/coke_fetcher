@@ -1,6 +1,23 @@
 # beta_coke_fetcher
 -------------------------
-This is a set of nodes that includes: *coordinator*, *simple_coke_finder*, *navigator*, and *coke_grabber*. For each node, a description and example usage is written below.
+
+This is a set of nodes that includes: *coordinator*, *simple_coke_finder*,
+*navigator*, and *coke_grabber*. For each node, a description and example usage
+is written below.
+
+## Contributors and history
+
+This was a group project for EECS /[34]76/ at CWRU in Spring 2016.  The
+following people contributed to this repository (listed in alphabetical order):
+
++ Gabby Gutierrez
++ Xinyu Li
++ James Starkman
++ Shipei Tian
+
+Regarding the commit history, the lack of branches is deliberate: there was not
+enough work done in parallel to merit the complexity of branching.  Also, note
+that each commit is attributed to whoever happened to be typing at the time.
 
 ## Setup
 To prepare the robot for use of the beta_coke_fetcher package, complete the following:
