@@ -13,9 +13,9 @@ This was a group project for EECS /[34]76/ at CWRU in Spring 2016.  The
 following people contributed to this repository (listed in alphabetical order):
 
 + Gabby Gutierrez
-+ Xinyu Li
 + James Starkman
 + Shipei Tian
++ Xinyu Li
 
 Regarding the commit history, the lack of branches is deliberate: there was not
 enough work done in parallel to merit the complexity of branching.  Also, note
