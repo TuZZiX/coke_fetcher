@@ -6,7 +6,7 @@
 #include <std_msgs/Float64.h>
 #include <std_msgs/Bool.h>
 #include <std_srvs/Trigger.h>
-#include <p8_beta/path.h>
+#include <beta_navigator/path.h>
 #include <std_msgs/Float64.h>
 
 //constants and parameters:
@@ -84,7 +84,7 @@ private:
     bool estopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
     bool clearEstopServiceCallback(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
     bool flushPathQueueCB(std_srvs::TriggerRequest& request, std_srvs::TriggerResponse& response);
-    bool appendPathQueueCB(p8_beta::pathRequest& request,p8_beta::pathResponse& response);
+    bool appendPathQueueCB(beta_navigator::pathRequest& request,beta_navigator::pathResponse& response);
     void alarmCB(const std_msgs::Bool& alarm_msg);
     void directionCB(const std_msgs::Float64& direction_msg);
 
