@@ -14,7 +14,7 @@
 #include <eigen3/Eigen/Geometry>
 #include <geometry_msgs/PoseStamped.h>
 #include <std_msgs/Bool.h>
-#include <cartesian_planner/baxter_cart_moveAction.h>
+#include <cartesian_planner/cart_moveAction.h>
 
 //define a class to encapsulate some of the tedium of populating and sending goals,
 // and interpreting responses
@@ -23,17 +23,17 @@ private:
     ros::NodeHandle nh_;
 
     //messages to send/receive cartesian goals / results:
-    cartesian_planner::baxter_cart_moveGoal cart_goal_;
-    cartesian_planner::baxter_cart_moveResult cart_result_;
+    cartesian_planner::cart_moveGoal cart_goal_;
+    cartesian_planner::cart_moveResult cart_result_;
     std::vector <double> q_vec_; //holder for right-arm angles
     geometry_msgs::PoseStamped tool_pose_stamped_;
     //an action client to send goals to cartesian-move action server
-    actionlib::SimpleActionClient<cartesian_planner::baxter_cart_moveAction> cart_move_action_client_; //("cartMoveActionServer", true);
+    actionlib::SimpleActionClient<cartesian_planner::cart_moveAction> cart_move_action_client_; //("cartMoveActionServer", true);
     double computed_arrival_time_;
     bool finished_before_timeout_;
     //callback fnc for cartesian action server to return result to this node:
     void doneCb_(const actionlib::SimpleClientGoalState& state,
-                 const cartesian_planner::baxter_cart_moveResultConstPtr& result);
+                 const cartesian_planner::cart_moveResultConstPtr& result);
 public:
     ArmMotionCommander(ros::NodeHandle* nodehandle); //define the body of the constructor outside of class definition
 

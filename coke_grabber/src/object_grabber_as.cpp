@@ -1,6 +1,6 @@
 // object_grabber_as: 
 // wsn, April, 2016
-// illustrates use of baxter_cart_move_as, action server called "cartMoveActionServer"
+// illustrates use of cart_move_as, action server called "cartMoveActionServer"
 
 #include <ArmMotionCommander/ArmMotionCommander.h>
 #include <coke_grabber/coke_grabberAction.h>
@@ -147,19 +147,19 @@ int ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obje
     int rtn_val;
     //send a command to plan a joint-space move to pre-defined pose:
     rtn_val = arm_motion_commander.plan_move_to_pre_pose();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("plan_move_to_pre_pose plan failed");
         return rtn_val;
     }
     //send command to execute planned motion
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("plan_move_to_pre_pose exe failed");
         return rtn_val;
     }
     //inquire re/ right-arm joint angles:
     rtn_val=arm_motion_commander.rt_arm_request_q_data();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("rt_arm_request_q_data failed");
         return rtn_val;
     }
@@ -189,13 +189,13 @@ int ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obje
     des_gripper_approach_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_approach_);
     des_gripper_approach_pose.pose = addPose(des_gripper_approach_pose.pose, coke_pose);
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_approach_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("des_gripper_approach_pose plan failed");
         return rtn_val;
     }
     //try to move here:
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("des_gripper_approach_pose exe failed");
         return rtn_val;
     }
@@ -204,12 +204,12 @@ int ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obje
     des_gripper_grasp_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_grasp_);
     des_gripper_grasp_pose.pose = addPose(des_gripper_grasp_pose.pose, coke_pose);
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("des_gripper_grasp_pose plan failed");
         return rtn_val;
     }
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("des_gripper_grasp_pose exe failed");
         return rtn_val;
     }
@@ -223,24 +223,24 @@ int ObjectGrabber::vertical_cylinder_power_grasp(geometry_msgs::PoseStamped obje
     des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
     des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("des_gripper_depart_pose plan failed");
         return rtn_val;
     }
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("des_gripper_depart_pose exe failed");
         return rtn_val;
     }
     des_gripper_hold_pose.header.frame_id = "torso";
     des_gripper_hold_pose.pose = addPosOffset(des_gripper_grasp_pose.pose, hold_offset);
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("des_gripper_hold_pose plan failed");
         return rtn_val;
     }
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         ROS_INFO("des_gripper_hold_pose exe failed");
         return rtn_val;
     }
@@ -254,17 +254,17 @@ int ObjectGrabber::grab_coke(geometry_msgs::PoseStamped object_pose) {
     int rtn_val;
     //send a command to plan a joint-space move to pre-defined pose:
     rtn_val = arm_motion_commander.plan_move_to_pre_pose();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //send command to execute planned motion
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //inquire re/ right-arm joint angles:
     rtn_val=arm_motion_commander.rt_arm_request_q_data();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     gripper_publisher.publish(gripper_open);
@@ -283,29 +283,29 @@ int ObjectGrabber::grab_coke(geometry_msgs::PoseStamped object_pose) {
     des_gripper_hold_pose.pose = addPosOffset(object_pose.pose, hold_offset);
 
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     rtn_val = arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_approach_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //try to move here:
     rtn_val = arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //slide to can:
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     rtn_val = arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //close the gripper:
@@ -315,19 +315,19 @@ int ObjectGrabber::grab_coke(geometry_msgs::PoseStamped object_pose) {
 
     //depart vertically:
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     rtn_val = arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_hold_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     rtn_val = arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     return rtn_val;
@@ -360,12 +360,12 @@ int ObjectGrabber::drop_coke(geometry_msgs::PoseStamped object_pose) {
     des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
     des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //try to move here:
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //slide to can:
@@ -373,11 +373,11 @@ int ObjectGrabber::drop_coke(geometry_msgs::PoseStamped object_pose) {
     des_gripper_grasp_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_grasp_);
     des_gripper_grasp_pose.pose = addPose(des_gripper_grasp_pose.pose, coke_pose);
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_grasp_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //close the gripper:
@@ -390,25 +390,25 @@ int ObjectGrabber::drop_coke(geometry_msgs::PoseStamped object_pose) {
     des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
     des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     rtn_val = arm_motion_commander.plan_move_to_pre_pose();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //send command to execute planned motion
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //inquire re/ right-arm joint angles:
     rtn_val=arm_motion_commander.rt_arm_request_q_data();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     return rtn_val;
@@ -442,12 +442,12 @@ int ObjectGrabber::give_human() {
     des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
     des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //try to move here:
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
 
@@ -456,11 +456,11 @@ int ObjectGrabber::give_human() {
     des_gripper_depart_pose.pose = arm_motion_commander.transformEigenAffine3dToPose(a_gripper_depart_);
     des_gripper_depart_pose.pose = addPose(des_gripper_depart_pose.pose, coke_pose);
     rtn_val = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(des_gripper_depart_pose);
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //close the gripper:
@@ -469,23 +469,23 @@ int ObjectGrabber::give_human() {
     ros::Duration(2.0).sleep();
 
     rtn_val = arm_motion_commander.plan_move_to_pre_pose();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //send command to execute planned motion
     rtn_val=arm_motion_commander.rt_arm_execute_planned_path();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }
     //inquire re/ right-arm joint angles:
     rtn_val=arm_motion_commander.rt_arm_request_q_data();
-    if (rtn_val!=cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+    if (rtn_val!=cartesian_planner::cart_moveResult::SUCCESS) {
         return rtn_val;
     }*/
     gripper_publisher.publish(gripper_open);
     //wait for gripper to close:
     ros::Duration(2.0).sleep();    
-    int rtn_val = cartesian_planner::baxter_cart_moveResult::SUCCESS;
+    int rtn_val = cartesian_planner::cart_moveResult::SUCCESS;
     return rtn_val;
 }
 //callback: at present, hard-coded for Coke-can object;
@@ -498,13 +498,13 @@ void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<coke_grabber::
     switch(object_code) {
         case coke_grabber::coke_grabberGoal::MOVE_BACK:
             ret = arm_motion_commander.plan_move_to_pre_pose();
-            if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+            if (ret == cartesian_planner::cart_moveResult::SUCCESS) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
                 coke_grabber_as_.setSucceeded(grab_result_);
-            } else if (ret == cartesian_planner::baxter_cart_moveResult::RT_ARM_PATH_NOT_VALID) {
+            } else if (ret == cartesian_planner::cart_moveResult::PATH_NOT_VALID) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_CANNOT_REACH;
                 coke_grabber_as_.setAborted(grab_result_);
-            } else if (ret == cartesian_planner::baxter_cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
+            } else if (ret == cartesian_planner::cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_TIMEOUT;
                 coke_grabber_as_.setAborted(grab_result_);
             } else {
@@ -516,13 +516,13 @@ void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<coke_grabber::
         ROS_INFO("grab COKE_CAN");
             ret = vertical_cylinder_power_grasp(object_pose);
             //grab_coke(object_pose);
-            if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+            if (ret == cartesian_planner::cart_moveResult::SUCCESS) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
                 coke_grabber_as_.setSucceeded(grab_result_);
-            } else if (ret == cartesian_planner::baxter_cart_moveResult::RT_ARM_PATH_NOT_VALID) {
+            } else if (ret == cartesian_planner::cart_moveResult::PATH_NOT_VALID) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_CANNOT_REACH;
                 coke_grabber_as_.setAborted(grab_result_);
-            } else if (ret == cartesian_planner::baxter_cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
+            } else if (ret == cartesian_planner::cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_TIMEOUT;
                 coke_grabber_as_.setAborted(grab_result_);
             } else {
@@ -532,13 +532,13 @@ void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<coke_grabber::
             break;
         case coke_grabber::coke_grabberGoal::DROP_COKE:
             ret = drop_coke(object_pose);
-            if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+            if (ret == cartesian_planner::cart_moveResult::SUCCESS) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
                 coke_grabber_as_.setSucceeded(grab_result_);
-            } else if (ret == cartesian_planner::baxter_cart_moveResult::RT_ARM_PATH_NOT_VALID) {
+            } else if (ret == cartesian_planner::cart_moveResult::PATH_NOT_VALID) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_CANNOT_REACH;
                 coke_grabber_as_.setAborted(grab_result_);
-            } else if (ret == cartesian_planner::baxter_cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
+            } else if (ret == cartesian_planner::cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_TIMEOUT;
                 coke_grabber_as_.setAborted(grab_result_);
             } else {
@@ -548,13 +548,13 @@ void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<coke_grabber::
             break;
         case coke_grabber::coke_grabberGoal::GIVE_TO_HUMAN:
             ret = give_human();
-            if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+            if (ret == cartesian_planner::cart_moveResult::SUCCESS) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
                 coke_grabber_as_.setSucceeded(grab_result_);
-            } else if (ret == cartesian_planner::baxter_cart_moveResult::RT_ARM_PATH_NOT_VALID) {
+            } else if (ret == cartesian_planner::cart_moveResult::PATH_NOT_VALID) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_CANNOT_REACH;
                 coke_grabber_as_.setAborted(grab_result_);
-            } else if (ret == cartesian_planner::baxter_cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
+            } else if (ret == cartesian_planner::cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_TIMEOUT;
                 coke_grabber_as_.setAborted(grab_result_);
             } else {
@@ -564,16 +564,16 @@ void ObjectGrabber::executeCB(const actionlib::SimpleActionServer<coke_grabber::
             break;
         case coke_grabber::coke_grabberGoal::RIGHT_TO_POSE:
             ret = arm_motion_commander.rt_arm_plan_path_current_to_goal_pose(object_pose);
-            if (ret==cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+            if (ret==cartesian_planner::cart_moveResult::SUCCESS) {
                 ret=arm_motion_commander.rt_arm_execute_planned_path();
             }
-            if (ret == cartesian_planner::baxter_cart_moveResult::SUCCESS) {
+            if (ret == cartesian_planner::cart_moveResult::SUCCESS) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::OBJECT_ACQUIRED;
                 coke_grabber_as_.setSucceeded(grab_result_);
-            } else if (ret == cartesian_planner::baxter_cart_moveResult::RT_ARM_PATH_NOT_VALID) {
+            } else if (ret == cartesian_planner::cart_moveResult::PATH_NOT_VALID) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_CANNOT_REACH;
                 coke_grabber_as_.setAborted(grab_result_);
-            } else if (ret == cartesian_planner::baxter_cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
+            } else if (ret == cartesian_planner::cart_moveResult::NOT_FINISHED_BEFORE_TIMEOUT) {
                 grab_result_.return_code = coke_grabber::coke_grabberResult::FAILED_TIMEOUT;
                 coke_grabber_as_.setAborted(grab_result_);
             } else {
